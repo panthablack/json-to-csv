@@ -60,7 +60,7 @@ Route::middleware(['auth', 'verified'])->prefix('api')->group(function () {
     });
 
     // Individual CSV config management routes (for existing configs)
-    Route::resource('csv-config', CsvConfigController::class)->except(['create', 'edit']);
+    Route::resource('csv-config', CsvConfigController::class)->except(['create', 'edit'])->parameters(['csv-config' => 'csvConfiguration']);
     Route::post('csv-config/preview', [CsvConfigController::class, 'preview'])->name('csv.config.preview');
     Route::get('csv-config/{csvConfiguration}/analyze', [CsvConfigController::class, 'analyze'])->name('csv.config.analyze');
     Route::post('csv-config/{csvConfiguration}/duplicate', [CsvConfigController::class, 'duplicate'])->name('csv.config.duplicate');
