@@ -13,6 +13,7 @@ return new class() extends Migration {
         Schema::create('json_data', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('name')->unique();
             $table->string('filename')->unique();
             $table->string('original_filename');
             $table->integer('file_size');
