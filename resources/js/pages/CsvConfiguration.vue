@@ -69,6 +69,7 @@ const isLoadingJsonList = ref(false)
 // Form state
 const newCsvColumn = ref('')
 const newSourceField = ref('')
+const searchSuggestions = ref('')
 
 const props = defineProps<{
   json_data_id?: number
@@ -84,6 +85,26 @@ const availableSuggestions = computed(() => {
     }
   }
   return available
+})
+
+const filteredSuggestions = computed(() => {
+  if (!searchSuggestions.value.trim()) {
+    return availableSuggestions.value
+  }
+
+  const search = searchSuggestions.value.toLowerCase()
+  const filtered: Record<string, string> = {}
+
+  for (const [csvColumn, sourceField] of Object.entries(availableSuggestions.value)) {
+    if (
+      csvColumn.toLowerCase().includes(search) ||
+      sourceField.toLowerCase().includes(search)
+    ) {
+      filtered[csvColumn] = sourceField
+    }
+  }
+
+  return filtered
 })
 
 // Simple validation state
@@ -519,10 +540,20 @@ onMounted(() => {
                     Apply All ({{ Object.keys(availableSuggestions).length }})
                   </Button>
                 </div>
+
+                <!-- Search field for filtering suggestions -->
+                <div v-if="Object.keys(availableSuggestions).length > 0" class="space-y-2">
+                  <Input
+                    v-model="searchSuggestions"
+                    placeholder="Search suggestions by column or field name..."
+                    class="text-sm"
+                  />
+                </div>
+
                 <div class="flex flex-wrap gap-2">
-                  <!-- Available suggestions (clickable) -->
+                  <!-- Available suggestions (clickable) - now filtered -->
                   <Badge
-                    v-for="(sourceField, csvColumn) in availableSuggestions"
+                    v-for="(sourceField, csvColumn) in filteredSuggestions"
                     :key="`available-${csvColumn}`"
                     variant="outline"
                     class="cursor-pointer text-xs transition-colors hover:border-primary hover:bg-primary/10"
@@ -542,6 +573,13 @@ onMounted(() => {
                   >
                     {{ csvColumn }} ← {{ sourceField }} ✓
                   </Badge>
+                </div>
+
+                <!-- Show message when search yields no results -->
+                <div v-if="searchSuggestions.trim() && Object.keys(filteredSuggestions).length === 0" class="text-center py-4">
+                  <p class="text-sm text-muted-foreground">
+                    No suggestions match "{{ searchSuggestions }}"
+                  </p>
                 </div>
               </div>
 
