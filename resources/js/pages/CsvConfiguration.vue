@@ -484,7 +484,7 @@ onMounted(() => {
                     class="cursor-pointer transition-colors hover:bg-muted/50"
                     @click="selectJsonData(jsonFile.id)"
                   >
-                    <TableCell class="font-medium">{{ jsonFile.original_filename }}</TableCell>
+                    <TableCell class="font-medium">{{ jsonFile.name }}</TableCell>
                     <TableCell>{{ jsonFile.record_count?.toLocaleString() || 'N/A' }}</TableCell>
                     <TableCell>
                       <Badge

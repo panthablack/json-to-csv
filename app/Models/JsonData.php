@@ -9,6 +9,7 @@ class JsonData extends Model
 {
     protected $fillable = [
         'user_id',
+        'name',
         'filename',
         'original_filename',
         'file_size',

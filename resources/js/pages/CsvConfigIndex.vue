@@ -121,7 +121,7 @@ onMounted(() => {
       <div class="flex flex-col gap-2">
         <h1 class="text-2xl font-bold">CSV Configurations</h1>
         <p class="text-muted-foreground">
-          Manage CSV export configurations for {{ jsonData?.original_filename || 'your JSON data' }}
+          Manage CSV export configurations for {{ jsonData?.name || 'your JSON data' }}
         </p>
       </div>
 
@@ -142,7 +142,7 @@ onMounted(() => {
         <CardContent class="grid grid-cols-1 gap-4 text-sm md:grid-cols-4">
           <div class="flex justify-between">
             <span class="text-muted-foreground">Filename:</span>
-            <span class="font-medium">{{ jsonData.original_filename }}</span>
+            <span class="font-medium">{{ jsonData.name }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-muted-foreground">Records:</span>

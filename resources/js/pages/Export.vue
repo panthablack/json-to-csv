@@ -308,7 +308,7 @@ onMounted(() => {
                   >
                     <option value="">All JSON files</option>
                     <option v-for="file in jsonFiles" :key="file.id" :value="file.id">
-                      {{ file.original_filename }}
+                      {{ file.name }}
                     </option>
                   </select>
                   <Button
@@ -374,7 +374,7 @@ onMounted(() => {
                         <div class="mb-2 flex items-center justify-between">
                           <h3 class="truncate font-medium">{{ config.name }}</h3>
                           <Badge variant="secondary" class="text-xs">
-                            {{ config.json_data?.original_filename || 'Unknown' }}
+                            {{ config.json_data?.name || 'Unknown' }}
                           </Badge>
                         </div>
                         <p

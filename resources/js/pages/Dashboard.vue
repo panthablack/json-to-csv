@@ -192,7 +192,7 @@ async function deleteJsonFile(fileId: number) {
               <div class="flex items-center justify-between">
                 <div class="min-w-0 flex-1">
                   <h4 class="truncate text-sm font-medium">
-                    {{ file.original_filename }}
+                    {{ file.name }}
                   </h4>
                   <p class="mt-1 text-xs text-muted-foreground">
                     {{ file.record_count }} records • Uploaded
@@ -263,7 +263,7 @@ async function deleteJsonFile(fileId: number) {
                       {{ config.name }}
                     </p>
                     <p class="text-xs text-muted-foreground">
-                      {{ config.json_data?.original_filename || 'Unknown source' }}
+                      {{ config.json_data?.name || 'Unknown source' }}
                     </p>
                   </div>
                   <Badge variant="outline" class="text-xs">

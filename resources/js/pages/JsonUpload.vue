@@ -289,7 +289,7 @@ loadUploadedFiles()
                 >
                   <div class="flex flex-col gap-1">
                     <p class="truncate text-sm font-medium">
-                      {{ uploadedFile.original_filename }}
+                      {{ uploadedFile.name }}
                     </p>
                     <p class="text-xs text-muted-foreground">
                       {{ uploadedFile.record_count }} records

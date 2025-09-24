@@ -38,10 +38,14 @@ class JsonProcessorController extends Controller
             $filename = Str::uuid() . '.json';
             Storage::disk('local')->put("json-uploads/{$filename}", $content);
 
+            $originalFilename = $file->getClientOriginalName();
+            $name = pathinfo($originalFilename, PATHINFO_FILENAME) . '_' . time() . '.' . pathinfo($originalFilename, PATHINFO_EXTENSION);
+
             $jsonData = JsonData::create([
                 'user_id' => auth()->id(),
+                'name' => $name,
                 'filename' => $filename,
-                'original_filename' => $file->getClientOriginalName(),
+                'original_filename' => $originalFilename,
                 'file_size' => $file->getSize(),
                 'raw_data' => $content,
                 'parsed_structure' => $parseResult['structure'],
@@ -51,7 +55,7 @@ class JsonProcessorController extends Controller
 
             return response()->json([
                 'id' => $jsonData->id,
-                'filename' => $jsonData->original_filename,
+                'filename' => $jsonData->name,
                 'structure' => $jsonData->parsed_structure,
                 'record_count' => $jsonData->record_count,
                 'available_fields' => $this->jsonParserService->extractFieldPaths($parseResult['data'])
@@ -72,7 +76,7 @@ class JsonProcessorController extends Controller
 
         return response()->json([
             'id' => $json->id,
-            'filename' => $json->original_filename,
+            'filename' => $json->name,
             'structure' => $json->parsed_structure,
             'record_count' => $json->record_count,
             'status' => $json->status,
@@ -101,7 +105,7 @@ class JsonProcessorController extends Controller
     {
         $jsonFiles = JsonData::where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
-            ->get(['id', 'original_filename', 'record_count', 'status', 'created_at']);
+            ->get(['id', 'name', 'record_count', 'status', 'created_at']);
 
         return response()->json($jsonFiles);
     }
