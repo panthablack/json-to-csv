@@ -34,10 +34,11 @@ import { Head, router } from '@inertiajs/vue3'
 import { AlertCircle, Download, Eye, FileText, Plus, Save, Settings, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed((): BreadcrumbItem[] => [
   { title: 'Dashboard', href: dashboard().url },
-  { title: 'CSV Configuration', href: csvConfigPage().url },
-]
+  { title: 'CSV Configurations', href: props.json_data_id ? `/json-data/${props.json_data_id}/csv-config` : csvConfigPage().url },
+  { title: 'New Configuration', href: '#' },
+])
 
 // Configuration form data
 const config = ref({
@@ -358,7 +359,7 @@ onMounted(() => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 p-6">
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-bold">Configure CSV Export</h1>
+        <h1 class="text-2xl font-bold">Create CSV Export Configuration</h1>
         <p class="text-muted-foreground">
           Map JSON fields to CSV columns and configure export settings
         </p>

@@ -35,8 +35,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('csv.config.page');
 
     Route::get('/json-data/{jsonData}/csv-config', function ($jsonDataId) {
+        return Inertia::render('CsvConfigIndex', ['json_data_id' => $jsonDataId]);
+    })->name('csv.config.index')->where('jsonData', '[0-9]+');
+
+    Route::get('/json-data/{jsonData}/create-csv-config', function ($jsonDataId) {
         return Inertia::render('CsvConfiguration', ['json_data_id' => $jsonDataId]);
-    })->name('csv.config.page.with.json')->where('jsonData', '[0-9]+');
+    })->name('csv.config.create')->where('jsonData', '[0-9]+');
 
     Route::get('/export', function () {
         return Inertia::render('Export');
