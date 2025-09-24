@@ -216,20 +216,8 @@ async function saveConfiguration() {
         const response = await apiPost('/api/csv-config', config.value);
 
         if (!response.ok) {
-            let errorMessage = 'Failed to save configuration';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.message || errorMessage;
-            } catch (parseError) {
-                // Response might not be JSON (could be HTML error page)
-                const text = await response.text();
-                if (text.includes('<!DOCTYPE')) {
-                    errorMessage = 'Authentication required. Please refresh the page and log in.';
-                } else {
-                    errorMessage = 'Server error occurred';
-                }
-            }
-            throw new Error(errorMessage);
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save configuration');
         }
 
         const result = await response.json();
@@ -260,17 +248,8 @@ async function quickExport() {
         });
 
         if (!response.ok) {
-            let errorMessage = 'Export failed';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.message || errorMessage;
-            } catch {
-                const text = await response.text();
-                if (text.includes('<!DOCTYPE')) {
-                    errorMessage = 'Authentication required. Please refresh the page and log in.';
-                }
-            }
-            throw new Error(errorMessage);
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Export failed');
         }
 
         // Trigger download
