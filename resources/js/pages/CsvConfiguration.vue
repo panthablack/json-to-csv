@@ -63,6 +63,16 @@ const props = defineProps<{
 
 const hasFieldMappings = computed(() => Object.keys(config.value.field_mappings).length > 0);
 
+const availableSuggestions = computed(() => {
+    const available: Record<string, string> = {};
+    for (const [csvColumn, sourceField] of Object.entries(suggestedMappings.value)) {
+        if (!config.value.field_mappings[csvColumn]) {
+            available[csvColumn] = sourceField;
+        }
+    }
+    return available;
+});
+
 // Simple validation state
 const nameError = ref('');
 const nameValidated = ref(false);
@@ -150,6 +160,22 @@ function applySuggestions() {
     config.value.column_order = Object.keys(suggestedMappings.value);
 
     // Clear field mappings error after applying suggestions
+    if (fieldMappingsValidated.value) {
+        validateFieldMappings();
+    }
+}
+
+function addSingleMapping(csvColumn: string, sourceField: string) {
+    // Don't add if already exists
+    if (config.value.field_mappings[csvColumn]) return;
+
+    config.value.field_mappings[csvColumn] = sourceField;
+
+    if (!config.value.column_order.includes(csvColumn)) {
+        config.value.column_order.push(csvColumn);
+    }
+
+    // Clear field mappings error after adding
     if (fieldMappingsValidated.value) {
         validateFieldMappings();
     }
@@ -418,18 +444,33 @@ onMounted(() => {
                                         size="sm"
                                         variant="outline"
                                         @click="applySuggestions"
+                                        :disabled="Object.keys(availableSuggestions).length === 0"
                                     >
-                                        Apply All
+                                        Apply All ({{ Object.keys(availableSuggestions).length }})
                                     </Button>
                                 </div>
                                 <div class="flex flex-wrap gap-2">
+                                    <!-- Available suggestions (clickable) -->
                                     <Badge
-                                        v-for="(sourceField, csvColumn) in suggestedMappings"
-                                        :key="csvColumn"
+                                        v-for="(sourceField, csvColumn) in availableSuggestions"
+                                        :key="`available-${csvColumn}`"
                                         variant="outline"
-                                        class="text-xs"
+                                        class="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors"
+                                        @click="addSingleMapping(csvColumn, sourceField)"
+                                        :title="`Click to add: ${csvColumn} ← ${sourceField}`"
                                     >
                                         {{ csvColumn }} ← {{ sourceField }}
+                                    </Badge>
+                                    <!-- Already applied suggestions (non-clickable) -->
+                                    <Badge
+                                        v-for="(sourceField, csvColumn) in suggestedMappings"
+                                        :key="`applied-${csvColumn}`"
+                                        v-show="config.field_mappings[csvColumn]"
+                                        variant="secondary"
+                                        class="text-xs opacity-50"
+                                        :title="`Already added: ${csvColumn} ← ${sourceField}`"
+                                    >
+                                        {{ csvColumn }} ← {{ sourceField }} ✓
                                     </Badge>
                                 </div>
                             </div>
