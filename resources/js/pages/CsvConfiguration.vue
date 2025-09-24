@@ -62,6 +62,8 @@ const availableFields = ref<string[]>([])
 const suggestedMappings = ref<Record<string, string>>({})
 const previewData = ref<any>(null)
 const isPreviewLoading = ref(false)
+const jsonDataList = ref<any[]>([])
+const isLoadingJsonList = ref(false)
 
 // Form state
 const newCsvColumn = ref('')
@@ -165,6 +167,24 @@ async function loadSuggestions(id: number) {
   } catch (err) {
     console.error('Failed to load suggestions:', err)
   }
+}
+
+async function loadJsonDataList() {
+  try {
+    isLoadingJsonList.value = true
+    const response = await apiGet('/api/json')
+    if (!response.ok) throw new Error('Failed to load JSON data list')
+
+    jsonDataList.value = await response.json()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load JSON data list'
+  } finally {
+    isLoadingJsonList.value = false
+  }
+}
+
+function selectJsonData(jsonDataId: number) {
+  router.visit(`/json-data/${jsonDataId}/csv-config`)
 }
 
 function applySuggestions() {
@@ -326,6 +346,8 @@ onMounted(() => {
   // Only use props.json_data_id now - no more query parameter support
   if (props.json_data_id) {
     loadJsonData(props.json_data_id)
+  } else {
+    loadJsonDataList()
   }
 })
 </script>
@@ -342,11 +364,65 @@ onMounted(() => {
         </p>
       </div>
 
-      <div v-if="!jsonData && !isLoading" class="py-12 text-center">
-        <FileText class="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-        <p class="mb-2 text-lg font-medium">No JSON data selected</p>
-        <p class="mb-4 text-muted-foreground">Upload a JSON file first to configure CSV export</p>
-        <Button @click="router.visit(jsonUploadPage().url)"> Upload JSON File </Button>
+      <!-- JSON Data Selection Table -->
+      <div v-if="!jsonData && !isLoading">
+        <div v-if="isLoadingJsonList" class="py-12 text-center">
+          <p class="text-lg font-medium">Loading JSON data...</p>
+        </div>
+
+        <div v-else-if="jsonDataList.length === 0" class="py-12 text-center">
+          <FileText class="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
+          <p class="mb-2 text-lg font-medium">No JSON data found</p>
+          <p class="mb-4 text-muted-foreground">Upload a JSON file first to configure CSV export</p>
+          <Button @click="router.visit(jsonUploadPage().url)"> Upload JSON File </Button>
+        </div>
+
+        <div v-else class="space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-semibold">Select JSON Data</h2>
+              <p class="text-muted-foreground">Choose a JSON file to configure CSV export</p>
+            </div>
+            <Button @click="router.visit(jsonUploadPage().url)" variant="outline">
+              <Plus class="mr-2 h-4 w-4" />
+              Upload New File
+            </Button>
+          </div>
+
+          <Card>
+            <CardContent class="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Filename</TableHead>
+                    <TableHead>Records</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow
+                    v-for="jsonFile in jsonDataList"
+                    :key="jsonFile.id"
+                    class="cursor-pointer transition-colors hover:bg-muted/50"
+                    @click="selectJsonData(jsonFile.id)"
+                  >
+                    <TableCell class="font-medium">{{ jsonFile.original_filename }}</TableCell>
+                    <TableCell>{{ jsonFile.record_count?.toLocaleString() || 'N/A' }}</TableCell>
+                    <TableCell>
+                      <Badge :variant="jsonFile.status === 'processed' ? 'secondary' : 'destructive'">
+                        {{ jsonFile.status }}
+                      </Badge>
+                    </TableCell>
+                    <TableCell class="text-muted-foreground">
+                      {{ new Date(jsonFile.created_at).toLocaleDateString() }}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div v-else class="grid grid-cols-1 gap-6 xl:grid-cols-3">
