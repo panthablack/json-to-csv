@@ -11,25 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        \DB::statement('CREATE TABLE csv_configurations (
-            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            user_id BIGINT UNSIGNED NOT NULL,
-            json_data_id BIGINT UNSIGNED NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            description TEXT NULL,
-            field_mappings JSON NOT NULL,
-            column_order JSON NULL,
-            filters JSON NULL,
-            transformations JSON NULL,
-            include_headers TINYINT(1) NOT NULL DEFAULT 1,
-            delimiter VARCHAR(255) NOT NULL DEFAULT ",",
-            enclosure VARCHAR(255) NOT NULL DEFAULT "\"",
-            escape VARCHAR(255) NOT NULL DEFAULT "\\\\",
-            created_at TIMESTAMP NULL,
-            updated_at TIMESTAMP NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            FOREIGN KEY (json_data_id) REFERENCES json_data(id) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+        Schema::create('csv_configurations', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('json_data_id')->constrained('json_data')->onDelete('cascade');
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->json('field_mappings');
+            $table->json('column_order')->nullable();
+            $table->json('filters')->nullable();
+            $table->json('transformations')->nullable();
+            $table->boolean('include_headers')->default(true);
+            $table->string('delimiter')->default(',');
+            $table->string('enclosure')->default('"');
+            $table->string('escape')->default('\\\\');
+            $table->timestamps();
+        });
     }
 
     /**
