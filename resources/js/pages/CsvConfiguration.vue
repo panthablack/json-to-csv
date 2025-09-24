@@ -22,6 +22,7 @@ import { dashboard } from '@/routes';
 import { page as csvConfigPage } from '@/routes/csv/config';
 import { page as exportPage } from '@/routes/export';
 import { page as jsonUploadPage } from '@/routes/json/upload';
+import { store as storeJsonCsvConfig, preview as previewJsonCsvConfig } from '@/routes/json/csv/config';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard().url },
@@ -187,8 +188,7 @@ async function previewCsv() {
 
     try {
         isPreviewLoading.value = true;
-        const response = await apiPost('/api/csv-config/preview', {
-            json_data_id: config.value.json_data_id,
+        const response = await apiPost(previewJsonCsvConfig(config.value.json_data_id).url, {
             field_mappings: config.value.field_mappings,
             transformations: config.value.transformations,
             filters: config.value.filters,
@@ -217,7 +217,8 @@ async function saveConfiguration() {
 
     try {
         isLoading.value = true;
-        const response = await apiPost('/api/csv-config', config.value);
+        const { json_data_id, ...configData } = config.value;
+        const response = await apiPost(storeJsonCsvConfig(json_data_id).url, configData);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -279,9 +280,9 @@ watch(() => config.value.field_mappings, () => {
 }, { deep: true });
 
 onMounted(() => {
-    const jsonDataId = props.json_data_id || Number(new URLSearchParams(window.location.search).get('json_data_id'));
-    if (jsonDataId) {
-        loadJsonData(jsonDataId);
+    // Only use props.json_data_id now - no more query parameter support
+    if (props.json_data_id) {
+        loadJsonData(props.json_data_id);
     }
 });
 </script>

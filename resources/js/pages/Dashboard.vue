@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { apiDelete } from '@/composables/useApi'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { dashboard } from '@/routes'
+import { json as jsonDataCsvConfig } from '@/routes/csv/config/page/with'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { Download, FileText, Settings, Trash2, TrendingUp, Upload } from 'lucide-vue-next'
@@ -208,7 +209,7 @@ async function deleteJsonFile(fileId: number) {
                   <Button
                     size="sm"
                     variant="outline"
-                    @click="router.visit('/csv-config', { data: { json_data_id: file.id } })"
+                    @click="router.visit(jsonDataCsvConfig(file.id).url)"
                   >
                     <Settings class="mr-2 h-4 w-4" />
                     Configure

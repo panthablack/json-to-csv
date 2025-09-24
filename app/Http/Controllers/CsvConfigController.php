@@ -204,4 +204,90 @@ class CsvConfigController extends Controller
 
         return response()->json($newConfiguration, 201);
     }
+
+    // New methods for nested routes under /json-data/{jsonData}/csv-config
+
+    public function indexForJson(JsonData $jsonData): JsonResponse
+    {
+        Gate::authorize('view', $jsonData);
+
+        $configurations = CsvConfiguration::where('user_id', auth()->id())
+            ->where('json_data_id', $jsonData->id)
+            ->with('jsonData:id,original_filename')
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'json_data_id', 'name', 'description', 'created_at']);
+
+        return response()->json($configurations);
+    }
+
+    public function storeForJson(Request $request, JsonData $jsonData): JsonResponse
+    {
+        Gate::authorize('view', $jsonData);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'field_mappings' => 'required|array|min:1',
+            'column_order' => 'nullable|array',
+            'filters' => 'nullable|array',
+            'transformations' => 'nullable|array',
+            'include_headers' => 'boolean',
+            'delimiter' => 'string|max:1',
+            'enclosure' => 'string|max:1',
+            'escape' => 'string|max:1'
+        ]);
+
+        $availableFields = $this->jsonParserService->extractFieldPaths($jsonData->parsed_data);
+        $validationErrors = $this->csvBuilderService->validateConfiguration(
+            $request->field_mappings,
+            $availableFields
+        );
+
+        if (!empty($validationErrors)) {
+            return response()->json([
+                'errors' => ['field_mappings' => $validationErrors]
+            ], 422);
+        }
+
+        $configuration = CsvConfiguration::create([
+            'user_id' => auth()->id(),
+            'json_data_id' => $jsonData->id,
+            'name' => $request->name,
+            'description' => $request->description,
+            'field_mappings' => $request->field_mappings,
+            'column_order' => $request->column_order,
+            'filters' => $request->filters,
+            'transformations' => $request->transformations,
+            'include_headers' => $request->boolean('include_headers', true),
+            'delimiter' => $request->input('delimiter', ','),
+            'enclosure' => $request->input('enclosure', '"'),
+            'escape' => $request->input('escape', '\\')
+        ]);
+
+        return response()->json($configuration, 201);
+    }
+
+    public function previewForJson(Request $request, JsonData $jsonData): JsonResponse
+    {
+        Gate::authorize('view', $jsonData);
+
+        $request->validate([
+            'field_mappings' => 'required|array|min:1',
+            'transformations' => 'nullable|array',
+            'filters' => 'nullable|array',
+            'limit' => 'integer|min:1|max:20'
+        ]);
+
+        $data = $jsonData->parsed_data;
+        $limit = $request->integer('limit', 5);
+
+        $preview = $this->csvBuilderService->previewCsv(
+            $data,
+            $request->field_mappings,
+            $request->transformations ?? [],
+            $limit
+        );
+
+        return response()->json($preview);
+    }
 }

@@ -11,6 +11,7 @@ import { router } from '@inertiajs/vue3';
 import { dashboard } from '@/routes';
 import { page as jsonUploadPage } from '@/routes/json/upload';
 import { page as csvConfigPage } from '@/routes/csv/config';
+import { json as jsonDataCsvConfig } from '@/routes/csv/config/page/with';
 
 const page = usePage();
 
@@ -123,9 +124,7 @@ async function uploadFile() {
         const result = await response.json();
 
         // Redirect to CSV configuration page with the JSON data ID
-        router.visit(csvConfigPage().url, {
-            data: { json_data_id: result.id }
-        });
+        router.visit(jsonDataCsvConfig(result.id).url);
 
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Upload failed';
@@ -311,7 +310,7 @@ loadUploadedFiles();
                                         size="sm"
                                         variant="outline"
                                         class="mt-2 w-full"
-                                        @click="router.visit(csvConfigPage().url, { data: { json_data_id: uploadedFile.id } })"
+                                        @click="router.visit(jsonDataCsvConfig(uploadedFile.id).url)"
                                     >
                                         Configure CSV
                                     </Button>
