@@ -27,7 +27,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install -y nodejs
 
 # Copy application files
-COPY . .
+COPY --chown=www-data:www-data . .
 
 # Install PHP dependencies
 RUN composer install --no-scripts --no-autoloader
@@ -39,8 +39,7 @@ RUN npm install
 RUN composer dump-autoload --optimize
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-  && chmod -R 755 /var/www/html/storage
+RUN chmod -R 755 /var/www/html/storage
 
 # Expose port
 EXPOSE 8000
@@ -56,7 +55,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install -y nodejs
 
 # Copy application files
-COPY . .
+COPY --chown=www-data:www-data . .
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-scripts
@@ -69,8 +68,7 @@ RUN npm run build
 RUN apt-get remove -y nodejs npm && apt-get autoremove -y
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-  && chmod -R 755 /var/www/html/storage
+RUN chmod -R 755 /var/www/html/storage
 
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
