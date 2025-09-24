@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: development
+    container_name: json-to-csv-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/node_modules
+      - /var/www/html/vendor
+    ports:
+      - "8000:8000"
+      - "5173:5173" # Vite dev server
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=json_to_csv
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=password
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - json-to-csv-network
+
+  db:
+    image: mysql:8.0
+    container_name: json-to-csv-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: json_to_csv
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    networks:
+      - json-to-csv-network
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  json-to-csv-network:
+    driver: bridge

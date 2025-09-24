@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: production
+    container_name: json-to-csv-app-prod
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=json_to_csv
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - json-to-csv-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: json-to-csv-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./public:/var/www/html/public
+      - ./storage/app/public:/var/www/html/storage/app/public
+    depends_on:
+      - app
+    networks:
+      - json-to-csv-network
+
+  db:
+    image: mysql:8.0
+    container_name: json-to-csv-db-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: json_to_csv
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - db_data_prod:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    networks:
+      - json-to-csv-network
+
+volumes:
+  db_data_prod:
+    driver: local
+
+networks:
+  json-to-csv-network:
+    driver: bridge

@@ -1,0 +1,64 @@
+# Version control
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules
+vendor
+
+# Build outputs
+/public/hot
+/public/storage
+/storage/*.key
+/public/build
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+storage/logs/*
+
+# Testing
+/coverage
+.nyc_output
+.phpunit.result.cache
+
+# Database
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Cache
+bootstrap/cache/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Temporary files
+*.tmp
+*.temp
