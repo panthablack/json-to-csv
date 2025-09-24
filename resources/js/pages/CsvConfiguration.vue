@@ -23,7 +23,6 @@ import ValidationError from '@/components/ValidationError.vue'
 import { apiGet, apiPost } from '@/composables/useApi'
 import { dashboard } from '@/routes'
 import { page as csvConfigPage } from '@/routes/csv/config'
-import { page as exportPage } from '@/routes/export'
 import {
   preview as previewJsonCsvConfig,
   store as storeJsonCsvConfig,
@@ -307,9 +306,7 @@ async function saveConfiguration() {
     }
 
     const result = await response.json()
-    router.visit(exportPage().url, {
-      data: { configuration_id: result.id },
-    })
+    router.visit(`/json-data/${json_data_id}/csv-config`)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to save configuration'
   } finally {
