@@ -71,7 +71,7 @@ const newSourceField = ref('')
 const searchSuggestions = ref('')
 
 const props = defineProps<{
-  json_data_id?: number
+  json_data_id?: string | number
 }>()
 
 const hasFieldMappings = computed(() => Object.keys(config.value.field_mappings).length > 0)
@@ -364,7 +364,7 @@ watch(
 onMounted(() => {
   // Only use props.json_data_id now - no more query parameter support
   if (props.json_data_id) {
-    loadJsonData(props.json_data_id)
+    loadJsonData(Number(props.json_data_id))
   } else {
     loadJsonDataList()
   }

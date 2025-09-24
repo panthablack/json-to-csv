@@ -30,7 +30,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
-  json_data_id: number
+  json_data_id: string | number
 }>()
 
 const breadcrumbs: BreadcrumbItem[] = [
