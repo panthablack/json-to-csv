@@ -35,7 +35,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 
 const breadcrumbs = computed((): BreadcrumbItem[] => [
   { title: 'Dashboard', href: dashboard().url },
-  { title: 'CSV Configurations', href: props.json_data_id ? `/json-data/${props.json_data_id}/csv-config` : csvConfigPage().url },
+  {
+    title: 'CSV Configurations',
+    href: props.json_data_id ? `/json-data/${props.json_data_id}/csv-config` : csvConfigPage().url,
+  },
   { title: 'New Configuration', href: '#' },
 ])
 
@@ -95,10 +98,7 @@ const filteredSuggestions = computed(() => {
   const filtered: Record<string, string> = {}
 
   for (const [csvColumn, sourceField] of Object.entries(availableSuggestions.value)) {
-    if (
-      csvColumn.toLowerCase().includes(search) ||
-      sourceField.toLowerCase().includes(search)
-    ) {
+    if (csvColumn.toLowerCase().includes(search) || sourceField.toLowerCase().includes(search)) {
       filtered[csvColumn] = sourceField
     }
   }
@@ -305,7 +305,6 @@ async function saveConfiguration() {
       throw new Error(errorData.message || 'Failed to save configuration')
     }
 
-    const result = await response.json()
     router.visit(`/json-data/${json_data_id}/csv-config`)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to save configuration'
@@ -429,7 +428,9 @@ onMounted(() => {
                     <TableCell class="font-medium">{{ jsonFile.original_filename }}</TableCell>
                     <TableCell>{{ jsonFile.record_count?.toLocaleString() || 'N/A' }}</TableCell>
                     <TableCell>
-                      <Badge :variant="jsonFile.status === 'processed' ? 'secondary' : 'destructive'">
+                      <Badge
+                        :variant="jsonFile.status === 'processed' ? 'secondary' : 'destructive'"
+                      >
                         {{ jsonFile.status }}
                       </Badge>
                     </TableCell>
@@ -573,7 +574,10 @@ onMounted(() => {
                 </div>
 
                 <!-- Show message when search yields no results -->
-                <div v-if="searchSuggestions.trim() && Object.keys(filteredSuggestions).length === 0" class="text-center py-4">
+                <div
+                  v-if="searchSuggestions.trim() && Object.keys(filteredSuggestions).length === 0"
+                  class="py-4 text-center"
+                >
                   <p class="text-sm text-muted-foreground">
                     No suggestions match "{{ searchSuggestions }}"
                   </p>

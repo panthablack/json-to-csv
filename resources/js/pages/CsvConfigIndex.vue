@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -10,23 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { apiDelete, apiGet, apiPost } from '@/composables/useApi'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { apiGet, apiPost, apiDelete } from '@/composables/useApi'
 import { dashboard } from '@/routes'
 import { page as exportPage } from '@/routes/export'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
-import {
-  AlertCircle,
-  FileText,
-  Plus,
-  Settings,
-  Trash2,
-  Copy,
-  Download,
-  Eye
-} from 'lucide-vue-next'
+import { AlertCircle, Copy, Download, FileText, Plus, Settings, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
@@ -151,7 +142,7 @@ onMounted(() => {
             Source Data
           </CardTitle>
         </CardHeader>
-        <CardContent class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        <CardContent class="grid grid-cols-1 gap-4 text-sm md:grid-cols-4">
           <div class="flex justify-between">
             <span class="text-muted-foreground">Filename:</span>
             <span class="font-medium">{{ jsonData.original_filename }}</span>
@@ -168,7 +159,9 @@ onMounted(() => {
           </div>
           <div class="flex justify-between">
             <span class="text-muted-foreground">Uploaded:</span>
-            <span class="font-medium">{{ new Date(jsonData.created_at).toLocaleDateString() }}</span>
+            <span class="font-medium">{{
+              new Date(jsonData.created_at).toLocaleDateString()
+            }}</span>
           </div>
         </CardContent>
       </Card>
