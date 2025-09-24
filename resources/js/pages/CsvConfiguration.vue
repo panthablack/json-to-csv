@@ -14,16 +14,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertCircle, Plus, Trash2, Eye, Save, Settings, FileText, Download } from 'lucide-vue-next';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted, watch } from 'vue';
 import { apiGet, apiPost } from '@/composables/useApi';
+import ValidationError from '@/components/ValidationError.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
     { title: 'CSV Configuration', href: route('csv.config.page') },
 ];
-
-const page = usePage();
 
 // Configuration form data
 const config = ref({
@@ -58,6 +57,55 @@ const props = defineProps<{
 }>();
 
 const hasFieldMappings = computed(() => Object.keys(config.value.field_mappings).length > 0);
+
+// Simple validation state
+const nameError = ref('');
+const nameValidated = ref(false);
+const fieldMappingsError = ref('');
+const fieldMappingsValidated = ref(false);
+
+// Simple validation functions
+const validateName = (): boolean => {
+    nameValidated.value = true;
+
+    if (!config.value.name?.trim()) {
+        nameError.value = 'Configuration name is required';
+        return false;
+    }
+
+    if (config.value.name.trim().length < 2) {
+        nameError.value = 'Configuration name must be at least 2 characters';
+        return false;
+    }
+
+    if (config.value.name.trim().length > 255) {
+        nameError.value = 'Configuration name must be less than 255 characters';
+        return false;
+    }
+
+    nameError.value = '';
+    return true;
+};
+
+const validateFieldMappings = (): boolean => {
+    fieldMappingsValidated.value = true;
+
+    if (!hasFieldMappings.value) {
+        fieldMappingsError.value = 'At least one field mapping is required';
+        return false;
+    }
+
+    fieldMappingsError.value = '';
+    return true;
+};
+
+// Computed properties
+const canSave = computed(() => {
+    return hasFieldMappings.value &&
+           config.value.name?.trim() &&
+           config.value.json_data_id &&
+           !isLoading.value;
+});
 
 async function loadJsonData(id: number) {
     if (!id) return;
@@ -95,6 +143,11 @@ async function loadSuggestions(id: number) {
 function applySuggestions() {
     config.value.field_mappings = { ...suggestedMappings.value };
     config.value.column_order = Object.keys(suggestedMappings.value);
+
+    // Clear field mappings error after applying suggestions
+    if (fieldMappingsValidated.value) {
+        validateFieldMappings();
+    }
 }
 
 function addFieldMapping() {
@@ -106,6 +159,11 @@ function addFieldMapping() {
         config.value.column_order.push(newCsvColumn.value);
     }
 
+    // Clear field mappings error after adding
+    if (fieldMappingsValidated.value) {
+        validateFieldMappings();
+    }
+
     newCsvColumn.value = '';
     newSourceField.value = '';
 }
@@ -113,6 +171,11 @@ function addFieldMapping() {
 function removeFieldMapping(csvColumn: string) {
     delete config.value.field_mappings[csvColumn];
     config.value.column_order = config.value.column_order.filter(col => col !== csvColumn);
+
+    // Re-validate field mappings after removing
+    if (fieldMappingsValidated.value) {
+        validateFieldMappings();
+    }
 }
 
 async function previewCsv() {
@@ -139,25 +202,34 @@ async function previewCsv() {
 }
 
 async function saveConfiguration() {
-    if (!config.value.name || !hasFieldMappings.value || !config.value.json_data_id) {
-        error.value = 'Please provide a name and configure field mappings';
+    // Validate all fields
+    const nameValid = validateName();
+    const mappingsValid = validateFieldMappings();
+
+    if (!nameValid || !mappingsValid) {
+        error.value = 'Please correct the validation errors before saving';
         return;
     }
 
     try {
         isLoading.value = true;
-        const response = await fetch('/api/csv-config', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
-            body: JSON.stringify(config.value)
-        });
+        const response = await apiPost('/api/csv-config', config.value);
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save configuration');
+            let errorMessage = 'Failed to save configuration';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch (parseError) {
+                // Response might not be JSON (could be HTML error page)
+                const text = await response.text();
+                if (text.includes('<!DOCTYPE')) {
+                    errorMessage = 'Authentication required. Please refresh the page and log in.';
+                } else {
+                    errorMessage = 'Server error occurred';
+                }
+            }
+            throw new Error(errorMessage);
         }
 
         const result = await response.json();
@@ -175,26 +247,31 @@ async function quickExport() {
     if (!hasFieldMappings.value || !config.value.json_data_id) return;
 
     try {
-        const response = await fetch('/api/export/quick', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
-            body: JSON.stringify({
-                json_data_id: config.value.json_data_id,
-                field_mappings: config.value.field_mappings,
-                transformations: config.value.transformations,
-                filters: config.value.filters,
-                filename: config.value.name || 'export',
-                include_headers: config.value.include_headers,
-                delimiter: config.value.delimiter,
-                enclosure: config.value.enclosure,
-                escape: config.value.escape
-            })
+        const response = await apiPost('/api/export/quick', {
+            json_data_id: config.value.json_data_id,
+            field_mappings: config.value.field_mappings,
+            transformations: config.value.transformations,
+            filters: config.value.filters,
+            filename: config.value.name || 'export',
+            include_headers: config.value.include_headers,
+            delimiter: config.value.delimiter,
+            enclosure: config.value.enclosure,
+            escape: config.value.escape
         });
 
-        if (!response.ok) throw new Error('Export failed');
+        if (!response.ok) {
+            let errorMessage = 'Export failed';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch {
+                const text = await response.text();
+                if (text.includes('<!DOCTYPE')) {
+                    errorMessage = 'Authentication required. Please refresh the page and log in.';
+                }
+            }
+            throw new Error(errorMessage);
+        }
 
         // Trigger download
         const blob = await response.blob();
@@ -270,6 +347,11 @@ onMounted(() => {
                                         v-model="config.name"
                                         placeholder="e.g., User Export"
                                         required
+                                        @blur="validateName"
+                                    />
+                                    <ValidationError
+                                        :message="nameError"
+                                        :show="nameValidated && !!nameError"
                                     />
                                 </div>
                                 <div class="space-y-2">
@@ -409,6 +491,12 @@ onMounted(() => {
                                 </div>
                             </div>
 
+                            <!-- Field Mappings Validation Error -->
+                            <ValidationError
+                                :message="fieldMappingsError"
+                                :show="fieldMappingsValidated && !!fieldMappingsError"
+                            />
+
                             <!-- Current Mappings -->
                             <div v-if="hasFieldMappings" class="space-y-2">
                                 <Label>Current Mappings</Label>
@@ -449,7 +537,8 @@ onMounted(() => {
                     <div class="flex flex-wrap gap-3">
                         <Button
                             @click="saveConfiguration"
-                            :disabled="!config.name || !hasFieldMappings || isLoading"
+                            :disabled="isLoading"
+                            :variant="canSave ? 'default' : 'secondary'"
                         >
                             <Save class="h-4 w-4 mr-2" />
                             Save Configuration
