@@ -14,7 +14,8 @@ class JsonProcessorController extends Controller
 {
     public function __construct(
         private JsonParserService $jsonParserService
-    ) {}
+    ) {
+    }
 
     public function store(Request $request): JsonResponse
     {

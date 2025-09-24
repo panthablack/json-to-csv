@@ -8,7 +8,8 @@ class DataTransformerService
 {
     public function __construct(
         private JsonParserService $jsonParserService
-    ) {}
+    ) {
+    }
 
     public function transformData(array $data, array $fieldMappings, array $transformations = []): array
     {

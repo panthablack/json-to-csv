@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 interface ProgressProps {
-  modelValue?: number | null;
-  class?: any;
+  modelValue?: number | null
+  class?: any
 }
 
 const props = withDefaults(defineProps<ProgressProps>(), {
   modelValue: null,
-});
+})
 </script>
 
 <template>

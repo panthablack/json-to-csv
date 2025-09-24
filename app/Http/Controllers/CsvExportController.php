@@ -15,7 +15,8 @@ class CsvExportController extends Controller
 {
     public function __construct(
         private CsvBuilderService $csvBuilderService
-    ) {}
+    ) {
+    }
 
     public function exportSingle(CsvConfiguration $csvConfiguration): Response
     {
@@ -155,7 +156,7 @@ class CsvExportController extends Controller
     public function listExports(): JsonResponse
     {
         $exports = collect(Storage::disk('local')->files('exports'))
-            ->filter(fn($file) => str_ends_with($file, '.csv') || str_ends_with($file, '.zip'))
+            ->filter(fn ($file) => str_ends_with($file, '.csv') || str_ends_with($file, '.zip'))
             ->map(function ($file) {
                 $fullPath = storage_path("app/{$file}");
                 return [

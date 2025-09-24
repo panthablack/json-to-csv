@@ -10,7 +10,8 @@ class CsvBuilderService
 {
     public function __construct(
         private DataTransformerService $dataTransformerService
-    ) {}
+    ) {
+    }
 
     public function generateCsv(array $data, CsvConfiguration $config): string
     {
@@ -134,7 +135,7 @@ class CsvBuilderService
         $zipPath = storage_path("app/exports/{$zipFilename}");
 
         $zip = new \ZipArchive();
-        if ($zip->open($zipPath, \ZipArchive::CREATE) !== TRUE) {
+        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
             throw new \Exception("Cannot create ZIP file: {$zipPath}");
         }
 
@@ -193,7 +194,7 @@ class CsvBuilderService
     private function detectDataType(array $data, string $column): string
     {
         $values = array_column($data, $column);
-        $nonEmptyValues = array_filter($values, fn($v) => $v !== null && $v !== '');
+        $nonEmptyValues = array_filter($values, fn ($v) => $v !== null && $v !== '');
 
         if (empty($nonEmptyValues)) {
             return 'empty';
@@ -201,18 +202,18 @@ class CsvBuilderService
 
         $sample = array_slice($nonEmptyValues, 0, 10);
 
-        $isNumeric = array_reduce($sample, fn($carry, $val) => $carry && is_numeric($val), true);
+        $isNumeric = array_reduce($sample, fn ($carry, $val) => $carry && is_numeric($val), true);
         if ($isNumeric) {
-            $hasDecimals = array_reduce($sample, fn($carry, $val) => $carry || (is_float($val) || strpos($val, '.') !== false), false);
+            $hasDecimals = array_reduce($sample, fn ($carry, $val) => $carry || (is_float($val) || strpos($val, '.') !== false), false);
             return $hasDecimals ? 'decimal' : 'integer';
         }
 
-        $isBoolean = array_reduce($sample, fn($carry, $val) => $carry && is_bool($val), true);
+        $isBoolean = array_reduce($sample, fn ($carry, $val) => $carry && is_bool($val), true);
         if ($isBoolean) {
             return 'boolean';
         }
 
-        $isDate = array_reduce($sample, function($carry, $val) {
+        $isDate = array_reduce($sample, function ($carry, $val) {
             return $carry && (strtotime($val) !== false);
         }, true);
         if ($isDate) {

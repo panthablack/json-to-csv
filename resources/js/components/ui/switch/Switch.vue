@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 interface SwitchProps {
-  checked?: boolean;
-  class?: any;
+  checked?: boolean
+  class?: any
 }
 
 const props = withDefaults(defineProps<SwitchProps>(), {
   checked: false,
-});
+})
 
 const emit = defineEmits<{
-  'update:checked': [value: boolean];
-}>();
+  'update:checked': [value: boolean]
+}>()
 
 const toggle = () => {
-  emit('update:checked', !props.checked);
-};
+  emit('update:checked', !props.checked)
+}
 </script>
 
 <template>
@@ -24,17 +24,21 @@ const toggle = () => {
     type="button"
     v-bind="$attrs"
     @click="toggle"
-    :class="cn(
-      'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
-      props.checked ? 'bg-primary' : 'bg-input',
-      props.class
-    )"
+    :class="
+      cn(
+        'peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+        props.checked ? 'bg-primary' : 'bg-input',
+        props.class
+      )
+    "
   >
     <div
-      :class="cn(
-        'pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform',
-        props.checked ? 'translate-x-4' : 'translate-x-0'
-      )"
+      :class="
+        cn(
+          'pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform',
+          props.checked ? 'translate-x-4' : 'translate-x-0'
+        )
+      "
     />
   </button>
 </template>

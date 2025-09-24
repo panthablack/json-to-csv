@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 interface TableRowProps {
-  class?: any;
+  class?: any
 }
 
-const props = withDefaults(defineProps<TableRowProps>(), {});
+const props = withDefaults(defineProps<TableRowProps>(), {})
 </script>
 
 <template>
   <tr
-    :class="cn(
-      'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
-      props.class
-    )"
+    :class="
+      cn('border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted', props.class)
+    "
     v-bind="$attrs"
   >
     <slot />

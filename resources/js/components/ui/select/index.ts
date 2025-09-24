@@ -12,4 +12,4 @@ export {
   SelectTrigger,
   SelectValue,
   SelectViewport,
-} from './Select.vue';
+} from './Select.vue'

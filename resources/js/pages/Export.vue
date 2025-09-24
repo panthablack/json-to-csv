@@ -269,7 +269,10 @@ onMounted(() => {
                 <!-- Bulk Actions -->
                 <div class="flex items-center justify-between border-b pb-4">
                   <div class="flex items-center gap-3">
-                    <Checkbox :checked="allConfigsSelected" @update:checked="toggleAllConfigs" />
+                    <Checkbox
+                      :model-value="allConfigsSelected"
+                      @update:model-value="toggleAllConfigs"
+                    />
                     <span class="text-sm text-muted-foreground">
                       {{ selectedConfigs.length }} of {{ configurations.length }} selected
                     </span>
@@ -295,8 +298,8 @@ onMounted(() => {
                   >
                     <div class="flex items-start gap-3">
                       <Checkbox
-                        :checked="selectedConfigs.includes(config.id)"
-                        @update:checked="() => toggleConfigSelection(config.id)"
+                        :model-value="selectedConfigs.includes(config.id)"
+                        @update:model-value="() => toggleConfigSelection(config.id)"
                       />
                       <div class="min-w-0 flex-1">
                         <div class="mb-2 flex items-center justify-between">

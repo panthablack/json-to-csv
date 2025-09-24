@@ -1,29 +1,59 @@
 <script setup lang="ts">
-import type { CheckboxRootEmits, CheckboxRootProps } from 'reka-ui'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-vue-next'
-import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from 'reka-ui'
+import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 import { computed, type HTMLAttributes } from 'vue'
 
-const props = defineProps<CheckboxRootProps & { class?: HTMLAttributes['class'] }>()
-const emits = defineEmits<CheckboxRootEmits>()
+interface CheckboxProps {
+  modelValue?: boolean
+  checked?: boolean
+  disabled?: boolean
+  required?: boolean
+  name?: string
+  value?: string
+  id?: string
+  class?: HTMLAttributes['class']
+}
 
-const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props
-
-  return delegated
+const props = withDefaults(defineProps<CheckboxProps>(), {
+  modelValue: false,
+  checked: false,
+  disabled: false,
+  required: false,
 })
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const emits = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'update:checked': [checked: boolean]
+}>()
+
+const isChecked = computed(() => props.modelValue || props.checked)
+
+const handleCheckedChange = (checked: boolean) => {
+  emits('update:modelValue', checked)
+  emits('update:checked', checked)
+}
+
+const delegatedProps = computed(() => {
+  const { class: _, modelValue: __, ...delegated } = props
+  return {
+    ...delegated,
+    checked: isChecked.value,
+    onCheckedChange: handleCheckedChange,
+  }
+})
 </script>
 
 <template>
   <CheckboxRoot
     data-slot="checkbox"
-    v-bind="forwarded"
+    v-bind="delegatedProps"
     :class="
-      cn('peer border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-         props.class)"
+      cn(
+        'peer size-4 shrink-0 rounded-[4px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:aria-invalid:ring-destructive/40',
+        props.class
+      )
+    "
   >
     <CheckboxIndicator
       data-slot="checkbox-indicator"

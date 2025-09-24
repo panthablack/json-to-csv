@@ -15,7 +15,8 @@ class CsvConfigController extends Controller
     public function __construct(
         private CsvBuilderService $csvBuilderService,
         private JsonParserService $jsonParserService
-    ) {}
+    ) {
+    }
 
     public function index(): JsonResponse
     {
