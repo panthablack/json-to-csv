@@ -25,7 +25,3 @@ declare module 'vue' {
     }
 }
 
-// Global route function
-declare global {
-    function route(name: string, params?: any): string;
-}

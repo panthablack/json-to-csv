@@ -51,5 +51,9 @@ Route::get('download/{filename}', [CsvExportController::class, 'download'])
     ->middleware(['auth', 'verified'])
     ->name('export.download');
 
+Route::get('csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+})->name('csrf.token');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

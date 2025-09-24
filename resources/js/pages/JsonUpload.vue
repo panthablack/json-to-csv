@@ -8,12 +8,15 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { dashboard } from '@/routes';
+import { page as jsonUploadPage } from '@/routes/json/upload';
+import { page as csvConfigPage } from '@/routes/csv/config';
 
 const page = usePage();
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: route('dashboard') },
-    { title: 'JSON Upload', href: route('json.upload.page') },
+    { title: 'Dashboard', href: dashboard().url },
+    { title: 'JSON Upload', href: jsonUploadPage().url },
 ];
 
 const file = ref<File | null>(null);
@@ -120,7 +123,7 @@ async function uploadFile() {
         const result = await response.json();
 
         // Redirect to CSV configuration page with the JSON data ID
-        router.visit(route('csv.config.page'), {
+        router.visit(csvConfigPage().url, {
             data: { json_data_id: result.id }
         });
 
@@ -308,7 +311,7 @@ loadUploadedFiles();
                                         size="sm"
                                         variant="outline"
                                         class="mt-2 w-full"
-                                        @click="router.visit(route('csv.config.page'), { data: { json_data_id: uploadedFile.id } })"
+                                        @click="router.visit(csvConfigPage().url, { data: { json_data_id: uploadedFile.id } })"
                                     >
                                         Configure CSV
                                     </Button>

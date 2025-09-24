@@ -12,10 +12,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
+import { dashboard } from '@/routes';
+import { page as exportPage, download } from '@/routes/export';
+import { page as csvConfigPage } from '@/routes/csv/config';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: route('dashboard') },
-    { title: 'Export', href: route('export.page') },
+    { title: 'Dashboard', href: dashboard().url },
+    { title: 'Export', href: exportPage().url },
 ];
 
 const props = defineProps<{
@@ -201,7 +204,7 @@ async function deleteExport(filename: string) {
 }
 
 function downloadExport(filename: string) {
-    window.open(route('export.download', { filename }), '_blank');
+    window.open(download(filename).url, '_blank');
 }
 
 function formatFileSize(bytes: number): string {
@@ -246,7 +249,7 @@ onMounted(() => {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    @click="router.visit(route('csv.config.page'))"
+                                    @click="router.visit(csvConfigPage().url)"
                                 >
                                     New Configuration
                                 </Button>
@@ -257,7 +260,7 @@ onMounted(() => {
                                 <FileText class="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                                 <p class="text-lg font-medium mb-2">No configurations found</p>
                                 <p class="text-muted-foreground mb-4">Create a CSV configuration first</p>
-                                <Button @click="router.visit(route('csv.config.page'))">
+                                <Button @click="router.visit(csvConfigPage().url)">
                                     Create Configuration
                                 </Button>
                             </div>
@@ -316,7 +319,7 @@ onMounted(() => {
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            @click="router.visit(route('csv.config.page'), { data: { config_id: config.id } })"
+                                                            @click="router.visit(csvConfigPage().url, { data: { config_id: config.id } })"
                                                         >
                                                             <Eye class="h-4 w-4" />
                                                         </Button>

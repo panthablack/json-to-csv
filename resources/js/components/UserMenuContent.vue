@@ -6,6 +6,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { useCsrfToken } from '@/composables/useCsrfToken';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
@@ -16,7 +17,11 @@ interface Props {
     user: User;
 }
 
-const handleLogout = () => {
+const { renewToken } = useCsrfToken();
+
+const handleLogoutSuccess = async () => {
+    // Renew CSRF token after successful logout
+    await renewToken();
     router.flushAll();
 };
 
@@ -44,7 +49,7 @@ defineProps<Props>();
             class="block w-full"
             :href="logout().url"
             method="post"
-            @click="handleLogout"
+            @success="handleLogoutSuccess"
             as="button"
             data-test="logout-button"
         >

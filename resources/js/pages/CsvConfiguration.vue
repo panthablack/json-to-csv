@@ -18,10 +18,14 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted, watch } from 'vue';
 import { apiGet, apiPost } from '@/composables/useApi';
 import ValidationError from '@/components/ValidationError.vue';
+import { dashboard } from '@/routes';
+import { page as csvConfigPage } from '@/routes/csv/config';
+import { page as exportPage } from '@/routes/export';
+import { page as jsonUploadPage } from '@/routes/json/upload';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: route('dashboard') },
-    { title: 'CSV Configuration', href: route('csv.config.page') },
+    { title: 'Dashboard', href: dashboard().url },
+    { title: 'CSV Configuration', href: csvConfigPage().url },
 ];
 
 // Configuration form data
@@ -221,7 +225,7 @@ async function saveConfiguration() {
         }
 
         const result = await response.json();
-        router.visit(route('export.page'), {
+        router.visit(exportPage().url, {
             data: { configuration_id: result.id }
         });
     } catch (err) {
@@ -298,7 +302,7 @@ onMounted(() => {
                 <FileText class="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <p class="text-lg font-medium mb-2">No JSON data selected</p>
                 <p class="text-muted-foreground mb-4">Upload a JSON file first to configure CSV export</p>
-                <Button @click="router.visit(route('json.upload.page'))">
+                <Button @click="router.visit(jsonUploadPage().url)">
                     Upload JSON File
                 </Button>
             </div>

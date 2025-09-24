@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
+import { useCsrfToken } from '@/composables/useCsrfToken';
 import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
@@ -16,6 +17,13 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
 }>();
+
+const { renewToken } = useCsrfToken();
+
+const handleLoginSuccess = async () => {
+    // Renew CSRF token after successful login
+    await renewToken();
+};
 </script>
 
 <template>
@@ -35,6 +43,7 @@ defineProps<{
         <Form
             v-bind="AuthenticatedSessionController.store.form()"
             :reset-on-success="['password']"
+            @success="handleLoginSuccess"
             v-slot="{ errors, processing }"
             class="flex flex-col gap-6"
         >

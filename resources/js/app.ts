@@ -6,20 +6,6 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { initializeTheme } from './composables/useAppearance';
 
-// Import Wayfinder routes to make route() function globally available
-import * as wayfinder from './wayfinder';
-
-// Make route function globally available
-(window as any).route = (name: string, params?: any) => {
-    // Fallback route function
-    const routes: Record<string, string> = {
-        'dashboard': '/dashboard',
-        'json.upload.page': '/json-upload',
-        'csv.config.page': '/csv-config',
-        'export.page': '/export',
-    };
-    return routes[name] || '/';
-};
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
