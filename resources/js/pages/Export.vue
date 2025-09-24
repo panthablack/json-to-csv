@@ -17,8 +17,10 @@ import {
   Download,
   Eye,
   FileText,
+  Filter,
   Settings,
   Trash2,
+  X,
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 
@@ -35,19 +37,30 @@ const props = defineProps<{
 const configurations = ref<any[]>([])
 const exports = ref<any[]>([])
 const selectedConfigs = ref<number[]>([])
+const jsonFiles = ref<any[]>([])
+const selectedJsonDataId = ref<number | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 const hasSelectedConfigs = computed(() => selectedConfigs.value.length > 0)
+const filteredConfigurations = computed(() => {
+  if (!selectedJsonDataId.value) return configurations.value
+  return configurations.value.filter(config => config.json_data_id === selectedJsonDataId.value)
+})
 const allConfigsSelected = computed(
   () =>
-    configurations.value.length > 0 && selectedConfigs.value.length === configurations.value.length
+    filteredConfigurations.value.length > 0 &&
+    filteredConfigurations.value.every(config => selectedConfigs.value.includes(config.id))
 )
 
 async function loadConfigurations() {
   try {
     isLoading.value = true
-    const response = await fetch('/api/csv-config')
+    const url = selectedJsonDataId.value
+      ? `/api/csv-config?json_data_id=${selectedJsonDataId.value}`
+      : '/api/csv-config'
+
+    const response = await fetch(url)
     if (!response.ok) throw new Error('Failed to load configurations')
 
     configurations.value = await response.json()
@@ -74,6 +87,29 @@ async function loadExports() {
   }
 }
 
+async function loadJsonFiles() {
+  try {
+    const response = await fetch('/api/json')
+    if (!response.ok) throw new Error('Failed to load JSON files')
+
+    jsonFiles.value = await response.json()
+  } catch (err) {
+    console.error('Failed to load JSON files:', err)
+  }
+}
+
+function handleFilterChange(value: number | null) {
+  selectedJsonDataId.value = value
+  selectedConfigs.value = [] // Clear selection when filter changes
+  loadConfigurations()
+}
+
+function clearFilter() {
+  selectedJsonDataId.value = null
+  selectedConfigs.value = []
+  loadConfigurations()
+}
+
 function toggleConfigSelection(configId: number) {
   const index = selectedConfigs.value.indexOf(configId)
   if (index > -1) {
@@ -87,7 +123,7 @@ function toggleAllConfigs() {
   if (allConfigsSelected.value) {
     selectedConfigs.value = []
   } else {
-    selectedConfigs.value = configurations.value.map(config => config.id)
+    selectedConfigs.value = filteredConfigurations.value.map(config => config.id)
   }
 }
 
@@ -224,6 +260,7 @@ function formatFileSize(bytes: number): string {
 }
 
 onMounted(() => {
+  loadJsonFiles()
   loadConfigurations()
   loadExports()
 })
@@ -256,12 +293,44 @@ onMounted(() => {
                   New Configuration
                 </Button>
               </div>
+
+              <!-- Filter UI -->
+              <div class="mt-4 flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                  <Filter class="h-4 w-4 text-muted-foreground" />
+                  <span class="text-sm text-muted-foreground">Filter by JSON:</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <select
+                    :value="selectedJsonDataId || ''"
+                    @change="(e) => handleFilterChange(e.target.value ? Number(e.target.value) : null)"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">All JSON files</option>
+                    <option v-for="file in jsonFiles" :key="file.id" :value="file.id">
+                      {{ file.original_filename }}
+                    </option>
+                  </select>
+                  <Button
+                    v-if="selectedJsonDataId"
+                    size="sm"
+                    variant="ghost"
+                    @click="clearFilter"
+                  >
+                    <X class="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div v-if="configurations.length === 0" class="py-8 text-center">
+              <div v-if="filteredConfigurations.length === 0" class="py-8 text-center">
                 <FileText class="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-                <p class="mb-2 text-lg font-medium">No configurations found</p>
-                <p class="mb-4 text-muted-foreground">Create a CSV configuration first</p>
+                <p class="mb-2 text-lg font-medium">
+                  {{ selectedJsonDataId ? 'No configurations found for this JSON file' : 'No configurations found' }}
+                </p>
+                <p class="mb-4 text-muted-foreground">
+                  {{ selectedJsonDataId ? 'Try selecting a different JSON file or create a new configuration' : 'Create a CSV configuration first' }}
+                </p>
                 <Button @click="router.visit(csvConfigPage().url)"> Create Configuration </Button>
               </div>
 
@@ -274,7 +343,7 @@ onMounted(() => {
                       @update:model-value="toggleAllConfigs"
                     />
                     <span class="text-sm text-muted-foreground">
-                      {{ selectedConfigs.length }} of {{ configurations.length }} selected
+                      {{ selectedConfigs.length }} of {{ filteredConfigurations.length }} selected
                     </span>
                   </div>
                   <div class="flex items-center gap-2">
@@ -292,7 +361,7 @@ onMounted(() => {
                 <!-- Configuration List -->
                 <div class="space-y-3">
                   <div
-                    v-for="config in configurations"
+                    v-for="config in filteredConfigurations"
                     :key="config.id"
                     class="rounded-lg border p-4 transition-colors hover:bg-muted/50"
                   >

@@ -18,11 +18,17 @@ class CsvConfigController extends Controller
     ) {
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $configurations = CsvConfiguration::where('user_id', auth()->id())
-            ->with('jsonData:id,original_filename')
-            ->orderBy('created_at', 'desc')
+        $query = CsvConfiguration::where('user_id', auth()->id())
+            ->with('jsonData:id,original_filename');
+
+        // Filter by JSON data if specified
+        if ($request->has('json_data_id')) {
+            $query->where('json_data_id', $request->json_data_id);
+        }
+
+        $configurations = $query->orderBy('created_at', 'desc')
             ->get(['id', 'json_data_id', 'name', 'description', 'created_at']);
 
         return response()->json($configurations);
