@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { apiDelete } from '@/composables/useApi'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { dashboard } from '@/routes'
-import { json as jsonDataCsvConfig } from '@/routes/csv/config/page/with'
+import { index as jsonDataCsvConfig } from '@/routes/csv/config'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { Download, FileText, Settings, Trash2, TrendingUp, Upload } from 'lucide-vue-next'
