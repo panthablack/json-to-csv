@@ -42,6 +42,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('CsvConfiguration', ['json_data_id' => $jsonDataId]);
     })->name('csv.config.create')->where('jsonData', '[0-9]+');
 
+    Route::get('/csv-config/{csvConfiguration}/edit', function ($configId) {
+        return Inertia::render('CsvConfiguration', ['config_id' => $configId]);
+    })->name('csv.config.edit')->where('csvConfiguration', '[0-9]+');
+
     Route::get('/export', function () {
         return Inertia::render('Export');
     })->name('export.page');
@@ -60,7 +64,7 @@ Route::middleware(['auth', 'verified'])->prefix('api')->group(function () {
     });
 
     // Individual CSV config management routes (for existing configs)
-    Route::resource('csv-config', CsvConfigController::class)->except(['create', 'edit'])->parameters(['csv-config' => 'csvConfiguration']);
+    Route::resource('csv-config', CsvConfigController::class)->except(['create'])->parameters(['csv-config' => 'csvConfiguration']);
     Route::post('csv-config/preview', [CsvConfigController::class, 'preview'])->name('csv.config.preview');
     Route::get('csv-config/{csvConfiguration}/analyze', [CsvConfigController::class, 'analyze'])->name('csv.config.analyze');
     Route::post('csv-config/{csvConfiguration}/duplicate', [CsvConfigController::class, 'duplicate'])->name('csv.config.duplicate');

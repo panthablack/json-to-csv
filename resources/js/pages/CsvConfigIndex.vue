@@ -14,7 +14,7 @@ import {
 import { apiDelete, apiGet, apiPost } from '@/composables/useApi'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { dashboard } from '@/routes'
-import { page as exportPage } from '@/routes/export'
+import { edit as editCsvConfig, page as exportPage } from '@/routes/csv/config'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import { AlertCircle, Copy, Download, FileText, Plus, Settings, Trash2 } from 'lucide-vue-next'
@@ -97,11 +97,8 @@ function createNewConfiguration() {
 }
 
 function editConfiguration(configId: number) {
-  // For now, we'll navigate to the export page with the configuration
-  // In the future, this could navigate to an edit page
-  router.visit(exportPage().url, {
-    data: { configuration_id: configId },
-  })
+  // Navigate to the edit configuration page
+  router.visit(editCsvConfig(configId).url)
 }
 
 function exportConfiguration(configId: number) {

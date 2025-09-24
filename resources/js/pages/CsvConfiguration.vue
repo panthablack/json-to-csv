@@ -39,7 +39,7 @@ const breadcrumbs = computed((): BreadcrumbItem[] => [
     title: 'CSV Configurations',
     href: props.json_data_id ? `/json-data/${props.json_data_id}/csv-config` : csvConfigPage().url,
   },
-  { title: 'New Configuration', href: '#' },
+  { title: isEditMode.value ? 'Edit Configuration' : 'New Configuration', href: '#' },
 ])
 
 // Configuration form data
@@ -75,8 +75,10 @@ const searchSuggestions = ref('')
 
 const props = defineProps<{
   json_data_id?: string | number
+  config_id?: string | number
 }>()
 
+const isEditMode = computed(() => !!props.config_id)
 const hasFieldMappings = computed(() => Object.keys(config.value.field_mappings).length > 0)
 
 const availableSuggestions = computed(() => {
@@ -172,6 +174,43 @@ async function loadJsonData(id: number) {
     await loadSuggestions(id)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load JSON data'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function loadConfiguration(id: number) {
+  if (!id) return
+
+  try {
+    isLoading.value = true
+    const response = await apiGet(`/api/csv-config/${id}`)
+    if (!response.ok) throw new Error('Failed to load configuration')
+
+    const configData = await response.json()
+
+    // Load the associated JSON data
+    jsonData.value = configData.json_data
+
+    // Populate the form with existing configuration data
+    config.value = {
+      name: configData.name || '',
+      description: configData.description || '',
+      json_data_id: configData.json_data_id,
+      field_mappings: configData.field_mappings || {},
+      transformations: configData.transformations || {},
+      filters: configData.filters || [],
+      column_order: configData.column_order || [],
+      include_headers: configData.include_headers ?? true,
+      delimiter: configData.delimiter || ',',
+      enclosure: configData.enclosure || '"',
+      escape: configData.escape || '\\',
+    }
+
+    // Load suggestions for the associated JSON data
+    await loadSuggestions(configData.json_data_id)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load configuration'
   } finally {
     isLoading.value = false
   }
@@ -298,13 +337,29 @@ async function saveConfiguration() {
     isLoading.value = true
     const { json_data_id, ...configData } = config.value
     if (!json_data_id) throw 'json_data_id missing'
-    const response = await apiPost(storeJsonCsvConfig(json_data_id).url, configData)
+
+    let response
+    if (isEditMode.value) {
+      // Update existing configuration
+      response = await fetch(`/api/csv-config/${props.config_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify(configData),
+      })
+    } else {
+      // Create new configuration
+      response = await apiPost(storeJsonCsvConfig(json_data_id).url, configData)
+    }
 
     if (!response.ok) {
       const errorData = await response.json()
       throw new Error(errorData.message || 'Failed to save configuration')
     }
 
+    // Navigate back to the configuration list
     router.visit(`/json-data/${json_data_id}/csv-config`)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to save configuration'
@@ -361,10 +416,14 @@ watch(
 )
 
 onMounted(() => {
-  // Only use props.json_data_id now - no more query parameter support
-  if (props.json_data_id) {
+  if (isEditMode.value) {
+    // In edit mode, load the existing configuration
+    loadConfiguration(Number(props.config_id))
+  } else if (props.json_data_id) {
+    // In create mode with specific JSON data
     loadJsonData(Number(props.json_data_id))
   } else {
+    // In create mode, show JSON data selection
     loadJsonDataList()
   }
 })
@@ -376,7 +435,7 @@ onMounted(() => {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 p-6">
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-bold">Create CSV Export Configuration</h1>
+        <h1 class="text-2xl font-bold">{{ isEditMode ? 'Edit CSV Export Configuration' : 'Create CSV Export Configuration' }}</h1>
         <p class="text-muted-foreground">
           Map JSON fields to CSV columns and configure export settings
         </p>
