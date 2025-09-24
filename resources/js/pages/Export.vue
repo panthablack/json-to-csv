@@ -303,20 +303,22 @@ onMounted(() => {
                 <div class="flex items-center gap-2">
                   <select
                     :value="selectedJsonDataId || ''"
-                    @change="(e) => handleFilterChange(e.target.value ? Number(e.target.value) : null)"
-                    class="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    @change="
+                      e =>
+                        handleFilterChange(
+                          (e.target as HTMLInputElement)?.value
+                            ? Number((e.target as HTMLInputElement)?.value)
+                            : null
+                        )
+                    "
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
                   >
                     <option value="">All JSON files</option>
                     <option v-for="file in jsonFiles" :key="file.id" :value="file.id">
                       {{ file.name }}
                     </option>
                   </select>
-                  <Button
-                    v-if="selectedJsonDataId"
-                    size="sm"
-                    variant="ghost"
-                    @click="clearFilter"
-                  >
+                  <Button v-if="selectedJsonDataId" size="sm" variant="ghost" @click="clearFilter">
                     <X class="h-4 w-4" />
                   </Button>
                 </div>
@@ -326,10 +328,18 @@ onMounted(() => {
               <div v-if="filteredConfigurations.length === 0" class="py-8 text-center">
                 <FileText class="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
                 <p class="mb-2 text-lg font-medium">
-                  {{ selectedJsonDataId ? 'No configurations found for this JSON file' : 'No configurations found' }}
+                  {{
+                    selectedJsonDataId
+                      ? 'No configurations found for this JSON file'
+                      : 'No configurations found'
+                  }}
                 </p>
                 <p class="mb-4 text-muted-foreground">
-                  {{ selectedJsonDataId ? 'Try selecting a different JSON file or create a new configuration' : 'Create a CSV configuration first' }}
+                  {{
+                    selectedJsonDataId
+                      ? 'Try selecting a different JSON file or create a new configuration'
+                      : 'Create a CSV configuration first'
+                  }}
                 </p>
                 <Button @click="router.visit(csvConfigPage().url)"> Create Configuration </Button>
               </div>
