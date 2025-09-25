@@ -186,13 +186,14 @@ loadUploadedFiles()
               <!-- File Drop Zone -->
               <div
                 :class="[
-                  'rounded-lg border-2 border-dashed p-8 text-center transition-colors',
+                  'rounded-lg border-2 border-dashed p-8 text-center transition-colors cursor-pointer',
                   isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25',
                   file ? 'bg-muted/50' : '',
                 ]"
                 @drop.prevent="handleDrop"
                 @dragover.prevent="handleDragOver"
                 @dragleave="handleDragLeave"
+                @click="openFileDialog"
               >
                 <div v-if="!file" class="space-y-4">
                   <FileText class="mx-auto h-12 w-12 text-muted-foreground" />

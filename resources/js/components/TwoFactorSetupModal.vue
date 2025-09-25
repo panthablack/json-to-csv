@@ -185,7 +185,7 @@ watch(
                   />
                   <button
                     @click="copy(manualSetupKey || '')"
-                    class="relative block h-auto border-l border-border px-3 hover:bg-muted"
+                    class="cursor-pointer relative block h-auto border-l border-border px-3 hover:bg-muted"
                   >
                     <Check v-if="copied" class="w-4 text-green-500" />
                     <Copy v-else class="w-4" />

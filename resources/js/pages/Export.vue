@@ -12,7 +12,6 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import {
   AlertCircle,
-  Archive,
   Copy,
   Download,
   Eye,
@@ -290,7 +289,7 @@ onMounted(() => {
                             : null
                         )
                     "
-                    class="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+                    class="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none cursor-pointer"
                   >
                     <option value="">All JSON files</option>
                     <option v-for="file in jsonFiles" :key="file.id" :value="file.id">
@@ -353,7 +352,7 @@ onMounted(() => {
                   <div
                     v-for="config in filteredConfigurations"
                     :key="config.id"
-                    class="rounded-lg border p-4 transition-all duration-200 hover:bg-accent/30 hover:shadow-md hover:border-primary/30 glass"
+                    class="rounded-lg border p-4 transition-all duration-200 hover:bg-accent/30 hover:shadow-md hover:border-primary/30 glass cursor-pointer"
                   >
                     <div class="flex items-start gap-3">
                       <Checkbox
