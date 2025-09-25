@@ -29,17 +29,17 @@ const emits = defineEmits<{
 
 const isChecked = computed(() => props.modelValue || props.checked)
 
-const handleCheckedChange = (checked: boolean) => {
-  emits('update:modelValue', checked)
-  emits('update:checked', checked)
+const handleModelValueUpdate = (checked: boolean | 'indeterminate') => {
+  const booleanValue = checked === 'indeterminate' ? false : !!checked
+  emits('update:modelValue', booleanValue)
+  emits('update:checked', booleanValue)
 }
 
 const delegatedProps = computed(() => {
-  const { class: _, modelValue: __, ...delegated } = props
+  const { class: _, ...delegated } = props
   return {
     ...delegated,
-    checked: isChecked.value,
-    onCheckedChange: handleCheckedChange,
+    modelValue: isChecked.value,
   }
 })
 </script>
@@ -48,6 +48,7 @@ const delegatedProps = computed(() => {
   <CheckboxRoot
     data-slot="checkbox"
     v-bind="delegatedProps"
+    @update:model-value="handleModelValueUpdate"
     :class="
       cn(
         'peer size-4 shrink-0 rounded-[4px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:aria-invalid:ring-destructive/40',
