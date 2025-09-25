@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\CsvConfiguration;
 use League\Csv\Writer;
-use League\Csv\CharsetConverter;
 
 class CsvBuilderService
 {
@@ -119,7 +118,7 @@ class CsvBuilderService
 
     public function exportToFile(string $csvContent, string $filename, string $directory = 'exports'): string
     {
-        $fullPath = storage_path("app/{$directory}/{$filename}");
+        $fullPath = \storage_path("app/{$directory}/{$filename}");
 
         if (!is_dir(dirname($fullPath))) {
             mkdir(dirname($fullPath), 0755, true);
@@ -132,18 +131,33 @@ class CsvBuilderService
 
     public function createZipArchive(array $csvFiles, string $zipFilename): string
     {
-        $zipPath = storage_path("app/exports/{$zipFilename}");
+        $zipPath = \storage_path("app/exports/{$zipFilename}");
+
+        // Ensure the exports directory exists
+        if (!is_dir(dirname($zipPath))) {
+            mkdir(dirname($zipPath), 0755, true);
+        }
 
         $zip = new \ZipArchive();
-        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
-            throw new \Exception("Cannot create ZIP file: {$zipPath}");
+        $result = $zip->open($zipPath, \ZipArchive::CREATE);
+
+        if ($result !== true) {
+            throw new \Exception("Cannot create ZIP file: {$zipPath}. Error code: {$result}");
         }
 
         foreach ($csvFiles as $file) {
-            $zip->addFromString($file['filename'], $file['content']);
+            if (!$zip->addFromString($file['filename'], $file['content'])) {
+                throw new \Exception("Cannot add file {$file['filename']} to ZIP archive");
+            }
         }
 
-        $zip->close();
+        if (!$zip->close()) {
+            throw new \Exception("Cannot close ZIP file: {$zipPath}");
+        }
+
+        if (!file_exists($zipPath)) {
+            throw new \Exception("ZIP file was not created: {$zipPath}");
+        }
 
         return $zipPath;
     }

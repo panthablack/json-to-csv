@@ -8,6 +8,7 @@ use App\Services\CsvBuilderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,7 +37,7 @@ class CsvExportController extends Controller
             ->header('Expires', '0');
     }
 
-    public function exportMultiple(Request $request): Response
+    public function exportMultiple(Request $request): Response|BinaryFileResponse|JsonResponse
     {
         $request->validate([
             'configuration_ids' => 'required|array|min:1',
@@ -73,9 +74,16 @@ class CsvExportController extends Controller
         }
 
         $zipFilename = 'csv_export_' . date('Y-m-d_H-i-s') . '.zip';
-        $zipPath = $this->csvBuilderService->createZipArchive($csvFiles, $zipFilename);
 
-        return response()->download($zipPath, $zipFilename)->deleteFileAfterSend();
+        try {
+            $zipPath = $this->csvBuilderService->createZipArchive($csvFiles, $zipFilename);
+            return response()->download($zipPath, $zipFilename)->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to create ZIP export',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function generateAndStore(Request $request): JsonResponse
