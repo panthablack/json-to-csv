@@ -186,7 +186,7 @@ loadUploadedFiles()
               <!-- File Drop Zone -->
               <div
                 :class="[
-                  'rounded-lg border-2 border-dashed p-8 text-center transition-colors cursor-pointer',
+                  'cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors',
                   isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25',
                   file ? 'bg-muted/50' : '',
                 ]"
@@ -201,7 +201,7 @@ loadUploadedFiles()
                     <p class="text-lg font-medium">Drop your JSON file here</p>
                     <p class="text-sm text-muted-foreground">or click to browse files</p>
                   </div>
-                  <Button type="button" variant="outline" @click="openFileDialog">
+                  <Button type="button" variant="outline" @click.stop="openFileDialog">
                     Choose File
                   </Button>
                 </div>
@@ -215,7 +215,7 @@ loadUploadedFiles()
                   <div class="flex justify-center gap-2">
                     <Button
                       type="button"
-                      @click="uploadFile"
+                      @click.stop="uploadFile"
                       :disabled="!isValidFile || isUploading"
                     >
                       {{ isUploading ? 'Uploading...' : 'Upload' }}
@@ -223,7 +223,7 @@ loadUploadedFiles()
                     <Button
                       type="button"
                       variant="outline"
-                      @click="removeFile"
+                      @click.stop="removeFile"
                       :disabled="isUploading"
                     >
                       Remove
@@ -303,7 +303,7 @@ loadUploadedFiles()
                     size="sm"
                     variant="outline"
                     class="mt-2 w-full"
-                    @click="router.visit(jsonDataCsvConfig(uploadedFile.id).url)"
+                    @click.stop="router.visit(jsonDataCsvConfig(uploadedFile.id).url)"
                   >
                     Configure CSV
                   </Button>
