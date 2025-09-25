@@ -126,12 +126,23 @@ async function exportSingle(configId: number) {
     const response = await fetch(`/api/export/single/${configId}`)
     if (!response.ok) throw new Error('Export failed')
 
+    // Extract filename from Content-Disposition header
+    const contentDisposition = response.headers.get('content-disposition')
+    let filename = `export_${Date.now()}.csv` // fallback
+
+    if (contentDisposition) {
+      const matches = contentDisposition.match(/filename="?([^"]+)"?/)
+      if (matches && matches[1]) {
+        filename = matches[1]
+      }
+    }
+
     // Trigger download
     const blob = await response.blob()
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `export_${Date.now()}.csv`
+    a.download = filename
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
