@@ -110,20 +110,26 @@ function clearFilter() {
   loadConfigurations()
 }
 
-function toggleConfigSelection(configId: number) {
+function handleConfigSelection(configId: number, checked: boolean) {
   const index = selectedConfigs.value.indexOf(configId)
-  if (index > -1) {
-    selectedConfigs.value.splice(index, 1)
-  } else {
+
+  if (checked && index === -1) {
+    // Add to selection if checked and not already selected
     selectedConfigs.value.push(configId)
+  } else if (!checked && index > -1) {
+    // Remove from selection if unchecked and currently selected
+    selectedConfigs.value.splice(index, 1)
   }
 }
 
-function toggleAllConfigs() {
-  if (allConfigsSelected.value) {
-    selectedConfigs.value = []
-  } else {
+function toggleAllConfigs(checked?: boolean) {
+  // Use the provided checked value if available, otherwise toggle based on current state
+  const shouldSelectAll = checked !== undefined ? checked : !allConfigsSelected.value
+
+  if (shouldSelectAll) {
     selectedConfigs.value = filteredConfigurations.value.map(config => config.id)
+  } else {
+    selectedConfigs.value = []
   }
 }
 
@@ -378,7 +384,7 @@ onMounted(() => {
                     <div class="flex items-start gap-3">
                       <Checkbox
                         :model-value="selectedConfigs.includes(config.id)"
-                        @update:model-value="() => toggleConfigSelection(config.id)"
+                        @update:model-value="checked => handleConfigSelection(config.id, checked)"
                       />
                       <div class="min-w-0 flex-1">
                         <div class="mb-2 flex items-center justify-between">
