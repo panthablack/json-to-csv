@@ -94,35 +94,35 @@ async function deleteJsonFile(fileId: number) {
 
       <!-- Stats Cards -->
       <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-        <Card class="transition-shadow hover:shadow-md">
+        <Card class="card-gradient border-2 transition-all duration-200 hover:shadow-lg hover:border-primary/30">
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">JSON Files</CardTitle>
-            <FileText class="h-4 w-4 text-muted-foreground" />
+            <FileText class="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ stats.jsonFiles }}</div>
+            <div class="text-2xl font-bold text-primary">{{ stats.jsonFiles }}</div>
             <p class="text-xs text-muted-foreground">Uploaded data sources</p>
           </CardContent>
         </Card>
 
-        <Card class="transition-shadow hover:shadow-md">
+        <Card class="card-gradient border-2 transition-all duration-200 hover:shadow-lg hover:border-primary/30">
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Configurations</CardTitle>
-            <Settings class="h-4 w-4 text-muted-foreground" />
+            <Settings class="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ stats.configurations }}</div>
+            <div class="text-2xl font-bold text-primary">{{ stats.configurations }}</div>
             <p class="text-xs text-muted-foreground">CSV export configurations</p>
           </CardContent>
         </Card>
 
-        <Card class="transition-shadow hover:shadow-md">
+        <Card class="card-gradient border-2 transition-all duration-200 hover:shadow-lg hover:border-primary/30">
           <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle class="text-sm font-medium">Exports</CardTitle>
-            <Download class="h-4 w-4 text-muted-foreground" />
+            <Download class="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div class="text-2xl font-bold">{{ stats.exports }}</div>
+            <div class="text-2xl font-bold text-primary">{{ stats.exports }}</div>
             <p class="text-xs text-muted-foreground">Generated CSV files</p>
           </CardContent>
         </Card>
@@ -131,7 +131,7 @@ async function deleteJsonFile(fileId: number) {
       <!-- Quick Actions -->
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Button
-          class="flex h-auto flex-col items-center gap-2 p-4"
+          class="btn-primary-gradient text-primary-foreground border-0 flex h-auto flex-col items-center gap-2 p-4"
           @click="router.visit('/json-upload')"
         >
           <Upload class="h-6 w-6" />
@@ -139,7 +139,7 @@ async function deleteJsonFile(fileId: number) {
         </Button>
         <Button
           variant="outline"
-          class="flex h-auto flex-col items-center gap-2 p-4"
+          class="glass flex h-auto flex-col items-center gap-2 p-4 hover:border-primary/50"
           @click="router.visit('/csv-config')"
         >
           <Settings class="h-6 w-6" />
@@ -147,7 +147,7 @@ async function deleteJsonFile(fileId: number) {
         </Button>
         <Button
           variant="outline"
-          class="flex h-auto flex-col items-center gap-2 p-4"
+          class="glass flex h-auto flex-col items-center gap-2 p-4 hover:border-primary/50"
           @click="router.visit('/export')"
         >
           <Download class="h-6 w-6" />

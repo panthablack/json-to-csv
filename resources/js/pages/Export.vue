@@ -12,6 +12,7 @@ import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import {
   AlertCircle,
+  Archive,
   Copy,
   Download,
   Eye,
@@ -257,7 +258,7 @@ onMounted(() => {
       <div class="space-y-6">
         <!-- Configurations -->
         <div>
-          <Card>
+          <Card class="card-gradient border-2">
             <CardHeader>
               <div class="flex items-center justify-between">
                 <div>
@@ -267,7 +268,7 @@ onMounted(() => {
                   </CardTitle>
                   <CardDescription> Select configurations to export </CardDescription>
                 </div>
-                <Button size="sm" variant="outline" @click="router.visit(csvConfigPage().url)">
+                <Button size="sm" variant="outline" class="btn-primary-gradient text-primary-foreground border-0" @click="router.visit(csvConfigPage().url)">
                   New Configuration
                 </Button>
               </div>
@@ -337,10 +338,11 @@ onMounted(() => {
                   <div class="flex items-center gap-2">
                     <Button
                       size="sm"
+                      class="btn-primary-gradient text-primary-foreground border-0"
                       @click="exportMultiple"
                       :disabled="!hasSelectedConfigs || isLoading"
                     >
-                      <Archive class="mr-2 h-4 w-4" />
+                      <Download class="mr-2 h-4 w-4" />
                       Export Selected ({{ selectedConfigs.length }})
                     </Button>
                   </div>
@@ -351,7 +353,7 @@ onMounted(() => {
                   <div
                     v-for="config in filteredConfigurations"
                     :key="config.id"
-                    class="rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                    class="rounded-lg border p-4 transition-all duration-200 hover:bg-accent/30 hover:shadow-md hover:border-primary/30 glass"
                   >
                     <div class="flex items-start gap-3">
                       <Checkbox
