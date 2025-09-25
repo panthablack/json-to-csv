@@ -7,12 +7,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { dashboard } from '@/routes'
 import { page as csvConfigPage } from '@/routes/csv/config'
-import { download, page as exportPage } from '@/routes/export'
+import { page as exportPage } from '@/routes/export'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
 import {
   AlertCircle,
-  Archive,
   Copy,
   Download,
   Eye,
@@ -35,7 +34,6 @@ const props = defineProps<{
 
 // State
 const configurations = ref<any[]>([])
-const exports = ref<any[]>([])
 const selectedConfigs = ref<number[]>([])
 const jsonFiles = ref<any[]>([])
 const selectedJsonDataId = ref<number | null>(null)
@@ -76,16 +74,6 @@ async function loadConfigurations() {
   }
 }
 
-async function loadExports() {
-  try {
-    const response = await fetch('/api/export/list')
-    if (!response.ok) throw new Error('Failed to load exports')
-
-    exports.value = await response.json()
-  } catch (err) {
-    console.error('Failed to load exports:', err)
-  }
-}
 
 async function loadJsonFiles() {
   try {
@@ -149,8 +137,6 @@ async function exportSingle(configId: number) {
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
 
-    // Refresh exports list
-    await loadExports()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Export failed'
   }
@@ -158,6 +144,13 @@ async function exportSingle(configId: number) {
 
 async function exportMultiple() {
   if (!hasSelectedConfigs.value) return
+
+  // If only one config selected, use single export instead
+  if (selectedConfigs.value.length === 1) {
+    await exportSingle(selectedConfigs.value[0])
+    selectedConfigs.value = []
+    return
+  }
 
   try {
     isLoading.value = true
@@ -186,8 +179,6 @@ async function exportMultiple() {
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
 
-    // Refresh exports list
-    await loadExports()
     selectedConfigs.value = []
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Bulk export failed'
@@ -235,40 +226,10 @@ async function deleteConfiguration(configId: number) {
   }
 }
 
-async function deleteExport(filename: string) {
-  if (!confirm('Are you sure you want to delete this export?')) return
-
-  try {
-    const response = await fetch(`/api/export/${filename}`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRF-TOKEN':
-          document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-      },
-    })
-
-    if (!response.ok) throw new Error('Failed to delete export')
-
-    await loadExports()
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to delete export'
-  }
-}
-
-function downloadExport(filename: string) {
-  window.open(download(filename).url, '_blank')
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
 
 onMounted(() => {
   loadJsonFiles()
   loadConfigurations()
-  loadExports()
 })
 </script>
 
@@ -282,9 +243,9 @@ onMounted(() => {
         <p class="text-muted-foreground">Export your configurations and manage downloads</p>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div class="space-y-6">
         <!-- Configurations -->
-        <div class="space-y-6 xl:col-span-2">
+        <div>
           <Card>
             <CardHeader>
               <div class="flex items-center justify-between">
@@ -447,61 +408,6 @@ onMounted(() => {
             <AlertCircle class="h-4 w-4" />
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
-        </div>
-
-        <!-- Export History -->
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle class="flex items-center gap-2">
-                <Download class="h-5 w-5" />
-                Export History
-              </CardTitle>
-              <CardDescription> Recent exports and downloads </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div v-if="exports.length === 0" class="py-8 text-center">
-                <Archive class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-                <p class="text-sm text-muted-foreground">No exports yet</p>
-              </div>
-
-              <div v-else class="space-y-3">
-                <div
-                  v-for="exportFile in exports"
-                  :key="exportFile.filename"
-                  class="rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                >
-                  <div class="flex items-start justify-between">
-                    <div class="min-w-0 flex-1">
-                      <p class="truncate text-sm font-medium">
-                        {{ exportFile.filename }}
-                      </p>
-                      <div class="mt-1 flex items-center gap-2">
-                        <span class="text-xs text-muted-foreground">
-                          {{ formatFileSize(exportFile.size) }}
-                        </span>
-                        <span class="text-xs text-muted-foreground">
-                          {{ exportFile.created_at }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        @click="downloadExport(exportFile.filename)"
-                      >
-                        <Download class="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" @click="deleteExport(exportFile.filename)">
-                        <Trash2 class="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
