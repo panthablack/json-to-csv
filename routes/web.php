@@ -4,15 +4,13 @@ use App\Http\Controllers\CsvConfigController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\JsonProcessorController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect('/dashboard');
-    }
-
-    return Inertia::render('Welcome');
+    if (Auth::check()) return redirect('/dashboard');
+    else return redirect('login');
 })->name('home');
 
 Route::get('dashboard', function () {
@@ -26,12 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/csv-config', function (Request $request) {
         // Redirect old query param usage to new nested route
-        if ($request->has('json_data_id')) {
-            return redirect("/json-data/{$request->json_data_id}/csv-config");
-        }
-
+        if ($request->has('json_data_id')) return redirect("/json-data/{$request->json_data_id}/csv-config");
         // Show general CSV config page (for cases without specific JSON data)
-        return Inertia::render('CsvConfiguration');
+        else return Inertia::render('CsvConfiguration');
     })->name('csv.config.page');
 
     Route::get('/json-data/{jsonData}/csv-config', function ($jsonDataId) {
@@ -86,5 +81,5 @@ Route::get('csrf-token', function () {
     return response()->json(['csrf_token' => csrf_token()]);
 })->name('csrf.token');
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

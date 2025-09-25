@@ -37,7 +37,7 @@ services:
       - db_data:/var/lib/mysql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      timeout: 20s
+      timeout: 10s
       retries: 10
     networks:
       - json-to-csv-network

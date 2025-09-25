@@ -39,7 +39,8 @@ RUN npm install
 RUN composer dump-autoload --optimize
 
 # Set permissions
-RUN chmod -R 755 /var/www/html/storage
+RUN chmod -R 755 /var/www/html/storage \
+  && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Expose port
 EXPOSE 8000
@@ -68,7 +69,8 @@ RUN npm run build
 RUN apt-get remove -y nodejs npm && apt-get autoremove -y
 
 # Set permissions
-RUN chmod -R 755 /var/www/html/storage
+RUN chmod -R 755 /var/www/html/storage \
+  && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
