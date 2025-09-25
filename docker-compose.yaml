@@ -11,8 +11,8 @@ services:
       - /var/www/html/node_modules
       - /var/www/html/vendor
     ports:
-      - "8000:8000"
-      - "5173:5173"
+      - "${APP_HOST_PORT:-8000}:8000"
+      - "${APP_HOST_PORT_FE:-5173}:5173"
     environment:
       - APP_ENV=${APP_ENV:-local}
       - APP_DEBUG=${APP_DEBUG:-true}
