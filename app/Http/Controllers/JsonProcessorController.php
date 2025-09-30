@@ -110,6 +110,77 @@ class JsonProcessorController extends Controller
         return response()->json($jsonFiles);
     }
 
+    public function update(Request $request, JsonData $json): JsonResponse
+    {
+        $this->authorize('update', $json);
+
+        $request->validate([
+            'file' => 'required|file|mimes:json,txt|max:10240'
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $content = file_get_contents($file->getRealPath());
+
+            $parseResult = $this->jsonParserService->parseJsonFile($content);
+
+            if (!$parseResult['success']) {
+                throw ValidationException::withMessages([
+                    'file' => [$parseResult['error']]
+                ]);
+            }
+
+            // Check structure compatibility
+            $compatibilityCheck = $this->jsonParserService->areStructuresCompatible(
+                $json->parsed_structure,
+                $parseResult['structure']
+            );
+
+            if (!$compatibilityCheck['compatible']) {
+                return response()->json([
+                    'error' => 'Structure incompatible',
+                    'message' => $compatibilityCheck['message'],
+                    'details' => [
+                        'missing_paths' => $compatibilityCheck['missing_paths'],
+                        'added_paths' => $compatibilityCheck['added_paths']
+                    ]
+                ], 422);
+            }
+
+            // Delete old file and store new one
+            Storage::disk('local')->delete("json-uploads/{$json->filename}");
+
+            $filename = Str::uuid() . '.json';
+            Storage::disk('local')->put("json-uploads/{$filename}", $content);
+
+            // Update the JSON data record
+            $json->update([
+                'filename' => $filename,
+                'file_size' => $file->getSize(),
+                'raw_data' => $content,
+                'parsed_structure' => $parseResult['structure'],
+                'record_count' => $parseResult['record_count'],
+                'status' => 'processed'
+            ]);
+
+            return response()->json([
+                'id' => $json->id,
+                'filename' => $json->name,
+                'structure' => $json->parsed_structure,
+                'record_count' => $json->record_count,
+                'available_fields' => $this->jsonParserService->extractFieldPaths($parseResult['data']),
+                'compatibility' => $compatibilityCheck
+            ]);
+
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to update JSON file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy(JsonData $json): JsonResponse
     {
         // Debug logging

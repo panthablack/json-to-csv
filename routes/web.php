@@ -22,6 +22,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('JsonUpload');
     })->name('json.upload.page');
 
+    Route::get('/json/{jsonData}/update', function ($jsonDataId) {
+        return Inertia::render('JsonUpload', ['updateJsonId' => (int)$jsonDataId]);
+    })->name('json.update.page')->where('jsonData', '[0-9]+');
+
     Route::get('/csv-config', function (Request $request) {
         // Redirect old query param usage to new nested route
         if ($request->has('json_data_id')) return redirect("/json-data/{$request->json_data_id}/csv-config");

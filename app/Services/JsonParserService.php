@@ -119,4 +119,57 @@ class JsonParserService
 
         return 1;
     }
+
+    /**
+     * Check if two JSON structures are compatible
+     * Compatible means the new structure has all the same paths as the old structure
+     * New structure can have additional paths, but cannot be missing existing paths
+     */
+    public function areStructuresCompatible(array $oldStructure, array $newStructure): array
+    {
+        $oldPaths = $this->extractStructurePaths($oldStructure);
+        $newPaths = $this->extractStructurePaths($newStructure);
+
+        $missingPaths = array_diff($oldPaths, $newPaths);
+        $addedPaths = array_diff($newPaths, $oldPaths);
+
+        $isCompatible = empty($missingPaths);
+
+        return [
+            'compatible' => $isCompatible,
+            'missing_paths' => array_values($missingPaths),
+            'added_paths' => array_values($addedPaths),
+            'message' => $isCompatible
+                ? 'Structures are compatible'
+                : 'New structure is missing required paths: ' . implode(', ', $missingPaths)
+        ];
+    }
+
+    /**
+     * Extract all possible field paths from a structure
+     */
+    private function extractStructurePaths(array $structure, string $prefix = ''): array
+    {
+        $paths = [];
+
+        if (isset($structure['type'])) {
+            if ($structure['type'] === 'object' && isset($structure['properties'])) {
+                foreach ($structure['properties'] as $key => $value) {
+                    $currentPath = $prefix ? "$prefix.$key" : $key;
+                    $paths[] = $currentPath;
+
+                    if (is_array($value)) {
+                        $subPaths = $this->extractStructurePaths($value, $currentPath);
+                        $paths = array_merge($paths, $subPaths);
+                    }
+                }
+            } elseif ($structure['type'] === 'array' && isset($structure['element_type'])) {
+                // For arrays, analyze the element type structure
+                $subPaths = $this->extractStructurePaths($structure['element_type'], $prefix);
+                $paths = array_merge($paths, $subPaths);
+            }
+        }
+
+        return array_unique($paths);
+    }
 }

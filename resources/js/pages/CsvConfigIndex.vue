@@ -17,7 +17,7 @@ import { dashboard } from '@/routes'
 import { edit as editCsvConfig, page as exportPage } from '@/routes/csv/config'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router } from '@inertiajs/vue3'
-import { AlertCircle, Copy, Download, FileText, Plus, Settings, Trash2 } from 'lucide-vue-next'
+import { AlertCircle, Copy, Download, FileText, Plus, RefreshCw, Settings, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
@@ -107,6 +107,10 @@ function exportConfiguration(configId: number) {
   })
 }
 
+function updateJsonData() {
+  router.visit(`/json/${props.json_data_id}/update`)
+}
+
 onMounted(() => {
   loadJsonData()
   loadConfigurations()
@@ -139,26 +143,34 @@ onMounted(() => {
             Source Data
           </CardTitle>
         </CardHeader>
-        <CardContent class="grid grid-cols-1 gap-4 text-sm md:grid-cols-4">
-          <div class="flex justify-between">
-            <span class="text-muted-foreground">Filename:</span>
-            <span class="font-medium">{{ jsonData.name }}</span>
+        <CardContent>
+          <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-4">
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">Filename:</span>
+              <span class="font-medium">{{ jsonData.name }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">Records:</span>
+              <span class="font-medium">{{ jsonData.record_count?.toLocaleString() || 'N/A' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">Status:</span>
+              <Badge :variant="jsonData.status === 'processed' ? 'secondary' : 'destructive'">
+                {{ jsonData.status }}
+              </Badge>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-muted-foreground">Uploaded:</span>
+              <span class="font-medium">{{
+                new Date(jsonData.created_at).toLocaleDateString()
+              }}</span>
+            </div>
           </div>
-          <div class="flex justify-between">
-            <span class="text-muted-foreground">Records:</span>
-            <span class="font-medium">{{ jsonData.record_count?.toLocaleString() || 'N/A' }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-muted-foreground">Status:</span>
-            <Badge :variant="jsonData.status === 'processed' ? 'secondary' : 'destructive'">
-              {{ jsonData.status }}
-            </Badge>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-muted-foreground">Uploaded:</span>
-            <span class="font-medium">{{
-              new Date(jsonData.created_at).toLocaleDateString()
-            }}</span>
+          <div class="mt-4 flex justify-end">
+            <Button @click="updateJsonData" variant="outline" size="sm">
+              <RefreshCw class="mr-2 h-4 w-4" />
+              Update JSON Data
+            </Button>
           </div>
         </CardContent>
       </Card>

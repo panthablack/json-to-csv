@@ -8,9 +8,14 @@ import { index as jsonDataCsvConfig } from '@/routes/csv/config'
 import { page as jsonUploadPage } from '@/routes/json/upload'
 import { type BreadcrumbItem } from '@/types'
 import { Head, router, usePage } from '@inertiajs/vue3'
-import { AlertCircle, FileText, Upload } from 'lucide-vue-next'
+import { AlertCircle, FileText, Upload, RefreshCw } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
+interface Props {
+  updateJsonId?: number
+}
+
+const props = defineProps<Props>()
 const page = usePage()
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,8 +29,16 @@ const isUploading = ref(false)
 const uploadProgress = ref(0)
 const error = ref<string | null>(null)
 const uploadedFiles = ref<any[]>([])
+const compatibilityInfo = ref<{
+  compatible: boolean
+  missing_paths: string[]
+  added_paths: string[]
+  message: string
+} | null>(null)
 
 const fileInput = ref<HTMLInputElement>()
+
+const isUpdateMode = computed(() => !!props.updateJsonId)
 
 const isValidFile = computed(() => {
   if (!file.value) return false
@@ -69,6 +82,7 @@ function handleDragLeave() {
 function removeFile() {
   file.value = null
   error.value = null
+  compatibilityInfo.value = null
   if (fileInput.value) {
     fileInput.value.value = ''
   }
@@ -86,6 +100,7 @@ async function uploadFile() {
   isUploading.value = true
   uploadProgress.value = 0
   error.value = null
+  compatibilityInfo.value = null
 
   const formData = new FormData()
   formData.append('file', file.value)
@@ -103,8 +118,17 @@ async function uploadFile() {
       document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
       ''
 
-    const response = await fetch('/api/json', {
-      method: 'POST',
+    // Use different endpoint and method for update vs create
+    const url = isUpdateMode.value ? `/api/json/${props.updateJsonId}` : '/api/json'
+    const method = isUpdateMode.value ? 'POST' : 'POST'
+
+    // Laravel requires _method for PUT/PATCH via FormData
+    if (isUpdateMode.value) {
+      formData.append('_method', 'PUT')
+    }
+
+    const response = await fetch(url, {
+      method,
       body: formData,
       headers: {
         'X-CSRF-TOKEN': token,
@@ -118,13 +142,38 @@ async function uploadFile() {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.message || errorData.error || 'Upload failed')
+
+      // Handle structure incompatibility errors
+      if (response.status === 422 && errorData.error === 'Structure incompatible') {
+        compatibilityInfo.value = {
+          compatible: false,
+          missing_paths: errorData.details?.missing_paths || [],
+          added_paths: errorData.details?.added_paths || [],
+          message: errorData.message || 'Structure is incompatible'
+        }
+        error.value = errorData.message
+      } else {
+        throw new Error(errorData.message || errorData.error || 'Upload failed')
+      }
+      return
     }
 
     const result = await response.json()
 
+    // Show compatibility info if available (for successful updates)
+    if (result.compatibility) {
+      compatibilityInfo.value = result.compatibility
+    }
+
     // Redirect to CSV configuration page with the JSON data ID
-    router.visit(jsonDataCsvConfig(result.id).url)
+    if (isUpdateMode.value) {
+      // Stay on the page briefly to show success, then redirect
+      setTimeout(() => {
+        router.visit(jsonDataCsvConfig(result.id).url)
+      }, 1500)
+    } else {
+      router.visit(jsonDataCsvConfig(result.id).url)
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Upload failed'
     uploadProgress.value = 0
@@ -165,22 +214,30 @@ loadUploadedFiles()
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex h-full flex-1 flex-col gap-6 p-6">
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-bold">Upload JSON File</h1>
+        <h1 class="text-2xl font-bold">
+          {{ isUpdateMode ? 'Update JSON File' : 'Upload JSON File' }}
+        </h1>
         <p class="text-muted-foreground">
-          Upload a JSON file to start configuring your CSV exports
+          {{
+            isUpdateMode
+              ? 'Upload a new JSON file with compatible structure to update existing data'
+              : 'Upload a JSON file to start configuring your CSV exports'
+          }}
         </p>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-6" :class="isUpdateMode ? '' : 'lg:grid-cols-3'">
         <!-- Upload Section -->
-        <div class="lg:col-span-2">
+        <div :class="isUpdateMode ? '' : 'lg:col-span-2'">
           <Card>
             <CardHeader>
               <CardTitle class="flex items-center gap-2">
-                <Upload class="h-5 w-5" />
-                File Upload
+                <component :is="isUpdateMode ? RefreshCw : Upload" class="h-5 w-5" />
+                {{ isUpdateMode ? 'File Update' : 'File Upload' }}
               </CardTitle>
-              <CardDescription> Select or drag and drop a JSON file to upload </CardDescription>
+              <CardDescription>
+                {{ isUpdateMode ? 'Select or drag and drop a compatible JSON file to update' : 'Select or drag and drop a JSON file to upload' }}
+              </CardDescription>
             </CardHeader>
             <CardContent class="space-y-4">
               <!-- File Drop Zone -->
@@ -218,7 +275,7 @@ loadUploadedFiles()
                       @click.stop="uploadFile"
                       :disabled="!isValidFile || isUploading"
                     >
-                      {{ isUploading ? 'Uploading...' : 'Upload' }}
+                      {{ isUploading ? (isUpdateMode ? 'Updating...' : 'Uploading...') : (isUpdateMode ? 'Update' : 'Upload') }}
                     </Button>
                     <Button
                       type="button"
@@ -243,7 +300,7 @@ loadUploadedFiles()
               <!-- Upload Progress -->
               <div v-if="isUploading" class="space-y-2">
                 <div class="flex justify-between text-sm">
-                  <span>Uploading...</span>
+                  <span>{{ isUpdateMode ? 'Updating...' : 'Uploading...' }}</span>
                   <span>{{ uploadProgress }}%</span>
                 </div>
                 <div class="h-2 w-full rounded-full bg-muted">
@@ -254,8 +311,43 @@ loadUploadedFiles()
                 </div>
               </div>
 
+              <!-- Compatibility Info -->
+              <Alert v-if="compatibilityInfo && !compatibilityInfo.compatible" variant="destructive">
+                <AlertCircle class="h-4 w-4" />
+                <AlertDescription>
+                  <div class="space-y-2">
+                    <p class="font-semibold">{{ compatibilityInfo.message }}</p>
+                    <div v-if="compatibilityInfo.missing_paths.length > 0">
+                      <p class="text-sm font-medium">Missing required fields:</p>
+                      <ul class="ml-4 mt-1 list-disc text-sm">
+                        <li v-for="path in compatibilityInfo.missing_paths" :key="path">
+                          {{ path }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
+              <Alert v-if="compatibilityInfo && compatibilityInfo.compatible" variant="default" class="border-green-500 bg-green-50 dark:bg-green-950">
+                <AlertCircle class="h-4 w-4 text-green-600" />
+                <AlertDescription class="text-green-800 dark:text-green-200">
+                  <div class="space-y-2">
+                    <p class="font-semibold">{{ compatibilityInfo.message }}</p>
+                    <div v-if="compatibilityInfo.added_paths.length > 0">
+                      <p class="text-sm font-medium">New fields added:</p>
+                      <ul class="ml-4 mt-1 list-disc text-sm">
+                        <li v-for="path in compatibilityInfo.added_paths" :key="path">
+                          {{ path }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
               <!-- Error Message -->
-              <Alert v-if="error" variant="destructive">
+              <Alert v-if="error && !compatibilityInfo" variant="destructive">
                 <AlertCircle class="h-4 w-4" />
                 <AlertDescription>{{ error }}</AlertDescription>
               </Alert>
@@ -269,8 +361,8 @@ loadUploadedFiles()
           </Card>
         </div>
 
-        <!-- Recent Files -->
-        <div>
+        <!-- Recent Files (only show in create mode) -->
+        <div v-if="!isUpdateMode">
           <Card>
             <CardHeader>
               <CardTitle>Recent Files</CardTitle>
